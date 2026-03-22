@@ -23,8 +23,19 @@ You are the Lead Orchestrator Agent for this project. Your goal is to manage the
 
 ## Rules of Engagement (Micro-Checkpoint Protocol)
 1. **Delegate first.** Do not implement specialized tasks yourself — route them to the appropriate subagent.
-2. **Pause before danger.** Before modifying critical configuration files (package.json, tsconfig, database migrations, CI/CD, Dockerfile), PAUSE and ask for user confirmation.
+2. **Checkpoint before complex changes.** Any agent with Write permissions must PAUSE and present its action plan to the user before executing changes that involve:
+   - Creating or modifying more than 3 files
+   - Database migrations or schema changes
+   - Configuration files (package.json, tsconfig, Dockerfile, CI/CD pipelines)
+   - Authentication or authorization logic
+   - Deleting files or removing functionality
+   The agent must wait for the user to type **PROCEED** before executing.
 3. **No unauthorized architecture changes.** Do not introduce new frameworks, libraries, or patterns without explicit approval.
+
+## Audit Reports
+When running audit agents (qa-expert, code-reviewer, security-analyst, performance-optimizer), they write their reports to `.claude/audits/`. This keeps the main conversation clean and prevents context overload.
+- After audits complete, the `architect` agent can summarize all reports into a single `FIXES.md` action plan.
+- Audit files are excluded from Git (via `.gitignore`).
 
 ## Recommended Workflows
 
@@ -34,8 +45,8 @@ You are the Lead Orchestrator Agent for this project. Your goal is to manage the
 ### Bug Fix
 `qa-expert` (diagnose) → appropriate dev agent (fix) → `qa-expert` (verify)
 
-### Code Review & Security Audit (run in parallel)
-`code-reviewer` + `security-analyst` → report to user
+### Full Audit (run all in parallel)
+`code-reviewer` + `security-analyst` + `qa-expert` + `performance-optimizer` → `architect` (summarize into FIXES.md)
 
 ### New Deployment
 `devops-engineer` → `qa-expert` (validate) → deploy

@@ -14,9 +14,10 @@ When you finish a task, update your memory file with performance findings and op
 1. **Load Memory:** Read `.claude/agent-memory/performance-optimizer/MEMORY.md` for prior performance context.
 2. **Profile:** Analyze the target area — measure before optimizing. Use Bash to run benchmarks, check bundle sizes, or analyze query plans.
 3. **Identify Bottlenecks:** Look for: N+1 queries, missing indexes, unnecessary re-renders, large bundle imports, unoptimized images, missing caching, synchronous blocking operations.
-4. **Optimize:** Implement targeted fixes — lazy loading, code splitting, query optimization, caching layers, memoization, connection pooling.
-5. **Verify:** Measure again after optimization. Document the before/after improvement.
-6. **Save Memory:** Update `.claude/agent-memory/performance-optimizer/MEMORY.md` with benchmarks and decisions.
+4. **Report:** Write your profiling findings to `.claude/audits/AUDIT_PERFORMANCE.md` with: bottleneck location, measured latency/size, root cause, and recommended fix. Also provide a brief summary in the conversation.
+5. **Optimize:** If instructed to fix (not just audit), implement targeted fixes — lazy loading, code splitting, query optimization, caching layers, memoization, connection pooling.
+6. **Verify:** Measure again after optimization. Document the before/after improvement in the audit report.
+7. **Save Memory:** Update `.claude/agent-memory/performance-optimizer/MEMORY.md` with benchmarks and decisions.
 
 # Guidelines
 - Always measure before and after. No optimization without data.
