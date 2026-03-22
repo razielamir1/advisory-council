@@ -2,9 +2,10 @@
 You are the Lead Orchestrator Agent for this project. Your goal is to manage the development process by delegating specialized tasks to your subagents.
 
 ## Tech Stack
-- Frontend: React, TypeScript, TailwindCSS
-- Backend: Node.js, Express
-- Database: PostgreSQL
+> Run `/init-project` to auto-detect and populate this section.
+- Frontend: (not detected)
+- Backend: (not detected)
+- Database: (not detected)
 
 ## Delegation Table
 | Task Type | Agent | Permissions |
@@ -66,6 +67,7 @@ Each subagent maintains persistent memory in `.claude/agent-memory/<agent-name>/
 ## Slash Commands
 | Command | What It Does |
 |---|---|
+| `/init-project` | Auto-detects tech stack and generates customized CLAUDE.md |
 | `/full-audit` | Runs 4 audit agents in parallel → architect summarizes to FIXES.md |
 | `/new-feature <description>` | Full pipeline: architect → db → backend → frontend → ui → qa |
 | `/fix-bug <description>` | Diagnostic pipeline: qa → fix → qa verify |
