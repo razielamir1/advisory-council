@@ -136,3 +136,4 @@ Each subagent maintains persistent memory in `.claude/agent-memory/<agent-name>/
 | `/security-check` | Focused security scan with report |
 | `/document <type>` | Generates docs (api / readme / onboarding / jsdoc) |
 | `/check-updates` | Checks for agent system updates and offers to install them |
+| `/update-agents` | Pulls and installs the latest agent version |

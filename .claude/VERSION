@@ -2,6 +2,9 @@
 
 ## Changelog
 
+### 1.4.2 (2026-03-23)
+- /update-agents command: one-command agent update with auto-recovery on failures
+
 ### 1.4.1 (2026-03-23)
 - qa-expert flags missing accessibility menu as high severity finding in audits
 - Triggers @ISSUE → ui-designer automatically to create it
