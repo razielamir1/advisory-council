@@ -10,6 +10,9 @@ You are the Lead Orchestrator Agent for this project. Your goal is to manage the
 ## Delegation Table
 | Task Type | Agent | Permissions |
 |---|---|---|
+| Prompt enhancement, requirements refinement | `prompt-architect` | Read-only (refines) |
+| Market research, competitive analysis, feasibility studies | `business-analyst` | Read + Write (docs only) |
+| PRDs, user stories, feature specs, product strategy | `product-manager` | Read + Write (docs only) |
 | System design, architecture, scalability | `architect` | Read-only (advises) |
 | React components, styling, TailwindCSS | `ui-designer` | Read + Write |
 | React logic, state, routing, data fetching | `frontend-developer` | Read + Write |
@@ -41,7 +44,7 @@ When running audit agents (qa-expert, code-reviewer, security-analyst, performan
 ## Recommended Workflows
 
 ### New Feature (full-stack)
-`architect` → `database-expert` → `backend-developer` → `frontend-developer` → `ui-designer` → `qa-expert`
+`prompt-architect` (refine) → `business-analyst` (research) → `product-manager` (PRD) → `architect` → `database-expert` → `backend-developer` → `frontend-developer` → `ui-designer` → `qa-expert`
 
 ### Bug Fix
 `qa-expert` (diagnose) → appropriate dev agent (fix) → `qa-expert` (verify)

@@ -1,12 +1,15 @@
 # Lead Orchestrator Agent
 
-A multi-agent system for Claude Code featuring 11 specialized AI agents that work together as a complete development team. Each agent has its own role, tools, permissions, and persistent memory.
+A multi-agent system for Claude Code featuring 14 specialized AI agents that work together as a complete development team. Each agent has its own role, tools, permissions, and persistent memory.
 
 ## Agents
 
 | Agent | Role | Model | Permissions |
 |---|---|---|---|
 | **Lead Orchestrator** | Routes tasks to the right agent | opus | Full |
+| `prompt-architect` | Refines raw prompts into engineering-grade specs | opus | Read-only |
+| `business-analyst` | Market research, competitive analysis, feasibility | opus | Read + Write (docs) |
+| `product-manager` | PRDs, user stories, feature specs, product strategy | opus | Read + Write (docs) |
 | `architect` | System design, architecture, scalability | opus | Read-only (advises) |
 | `frontend-developer` | React logic, state, routing, hooks | sonnet | Read + Write |
 | `ui-designer` | Visual design, TailwindCSS, components | sonnet | Read + Write |
@@ -162,7 +165,7 @@ The `architect` can then summarize all reports into a unified, prioritized `FIXE
 ## Recommended Workflows
 
 ### New Feature (Full-Stack)
-`architect` → `database-expert` → `backend-developer` → `frontend-developer` → `ui-designer` → `qa-expert`
+`prompt-architect` (refine) → `business-analyst` (research) → `product-manager` (PRD) → `architect` → `database-expert` → `backend-developer` → `frontend-developer` → `ui-designer` → `qa-expert`
 > Shortcut: `/new-feature <description>`
 
 ### Bug Fix
@@ -209,6 +212,9 @@ your-project/
 └── .claude/
     ├── settings.json                      # Safety hooks + MCP server config
     ├── agents/                            # Agent definitions (11 agents)
+    │   ├── prompt-architect.md
+    │   ├── business-analyst.md
+    │   ├── product-manager.md
     │   ├── architect.md
     │   ├── backend-developer.md
     │   ├── code-reviewer.md
@@ -230,6 +236,9 @@ your-project/
     ├── audits/                            # Audit reports (git-ignored)
     │   └── .gitkeep
     └── agent-memory/                      # Persistent memory (per-project)
+        ├── prompt-architect/MEMORY.md
+        ├── business-analyst/MEMORY.md
+        ├── product-manager/MEMORY.md
         ├── architect/MEMORY.md
         ├── backend-developer/MEMORY.md
         ├── code-reviewer/MEMORY.md

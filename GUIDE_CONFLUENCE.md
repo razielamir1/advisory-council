@@ -26,7 +26,7 @@
 
 ## 1. What Is This?
 
-A system of **11 specialized AI agents** that work together as a complete development team inside Claude Code. Instead of one AI doing everything, tasks are routed to the right specialist — just like a real team.
+A system of **14 specialized AI agents** that work together as a complete development team inside Claude Code. Instead of one AI doing everything, tasks are routed to the right specialist — just like a real team.
 
 **Key benefits:**
 - Each agent has deep expertise in its domain
@@ -262,7 +262,7 @@ Run @qa-expert in the background to scan the entire project for bugs
 
 **How:** Type `/agents` in the chat.
 
-**What you see:** An interactive menu listing all 11 agents with their descriptions. You can select one to invoke it.
+**What you see:** An interactive menu listing all 14 agents with their descriptions. You can select one to invoke it.
 
 ---
 
@@ -406,6 +406,9 @@ Audit reports are excluded from version control via `.gitignore`. They are tempo
 
 | Agent | Specialization | Best For |
 |---|---|---|
+| `prompt-architect` | Prompt engineering, requirements refinement | Transforming raw requests into precise specs |
+| `business-analyst` | Market research, competitive analysis | Discovery, feasibility, benchmarking |
+| `product-manager` | PRDs, user stories, feature specs | Product strategy, requirements, prioritization |
 | `frontend-developer` | React, TypeScript, hooks, state | Page logic, data fetching, forms |
 | `ui-designer` | TailwindCSS, components, layouts | Visual design, styling, responsiveness |
 | `backend-developer` | Express, middleware, APIs | Endpoints, auth, server logic |
@@ -441,6 +444,9 @@ Each agent has a memory file at `.claude/agent-memory/<agent-name>/MEMORY.md`.
 
 | Agent | Remembers |
 |---|---|
+| `prompt-architect` | Effective prompt patterns, common user gaps, project conventions |
+| `business-analyst` | Market data, competitor intel, user personas |
+| `product-manager` | Product decisions, feature history, stakeholder preferences |
 | `architect` | Architecture decisions, trade-offs, patterns |
 | `frontend-developer` | State patterns, API conventions, component structure |
 | `ui-designer` | Design decisions, color schemes, component library |
