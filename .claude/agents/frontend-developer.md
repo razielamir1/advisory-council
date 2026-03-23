@@ -26,3 +26,4 @@ When you finish a task, update your memory file with new patterns and convention
 - Colocate related code: keep hooks, types, and utilities close to where they're used.
 - Write clean, readable TypeScript. Avoid `any` type — use `unknown` and narrow.
 - Return a clear summary of what you built, which files changed, and any new dependencies needed.
+- For web projects: verify the accessibility menu component is integrated into the app's root layout. If the `ui-designer` has not yet created it, flag `@ISSUE → ui-designer` to create the accessibility menu component.

@@ -1,6 +1,11 @@
-1.3.0
+1.4.0
 
 ## Changelog
+
+### 1.4.0 (2026-03-23)
+- Accessibility menu is now a mandatory part of every web project
+- ui-designer auto-creates floating accessibility widget (font size, contrast, grayscale, readable font, animations, cursor, reading guide)
+- frontend-developer verifies accessibility menu is integrated, flags ui-designer if missing
 
 ### 1.3.0 (2026-03-23)
 - Cross-Agent Issue Resolution: agents flag problems outside their domain, orchestrator auto-routes to the right agent, fixes happen automatically
