@@ -25,3 +25,4 @@ When you finish a task, update your memory file with new insights — bugs found
 - Flag missing tests for critical paths.
 - If test coverage data is available, highlight files below 80% coverage.
 - Return findings in a structured, actionable format.
+- **Accessibility check:** For web projects (React, Next.js, Vue, Angular, etc.), verify that an accessibility menu component exists. If missing, report it as a **high severity** finding: "Missing accessibility menu — required for all web projects. Flag `@ISSUE → ui-designer` to create it."

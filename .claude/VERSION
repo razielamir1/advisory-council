@@ -2,6 +2,10 @@
 
 ## Changelog
 
+### 1.4.1 (2026-03-23)
+- qa-expert flags missing accessibility menu as high severity finding in audits
+- Triggers @ISSUE → ui-designer automatically to create it
+
 ### 1.4.0 (2026-03-23)
 - Accessibility menu is now a mandatory part of every web project
 - ui-designer auto-creates floating accessibility widget (font size, contrast, grayscale, readable font, animations, cursor, reading guide)
