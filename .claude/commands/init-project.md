@@ -100,6 +100,35 @@ Tell the user: "To set up scheduled scans, type `/schedule` and configure a recu
 **If D:**
 No setup needed — just confirm QA is available on demand.
 
-## Step 4: Report
+## Step 4: Autonomy Level
 
-Tell the user what was detected and that CLAUDE.md has been generated. List the detected technologies in a clean table. Also confirm which QA monitoring option was set up.
+Ask the user how much independence they want the agents to have:
+
+---
+
+**How much freedom should the agents have?**
+
+**Level 1: Full control** — Agents stop and ask for your approval (PROCEED) before any significant change. You see everything before it happens. Best if you're new to ORCA or want to learn how each agent works.
+
+**Level 2: Semi-autonomous** — Agents only stop for risky changes (deleting files, database migrations, authentication, deployment). Everything else runs automatically. Best for daily development work.
+
+**Level 3: Fully autonomous** — Agents do everything on their own and give you a summary when done. They only stop if they hit an error they can't resolve. Best when you trust the system and want maximum speed.
+
+---
+
+Based on the user's choice, update the "Rules of Engagement" section in the generated CLAUDE.md:
+
+**If Level 1 (full control):**
+Keep the current Micro-Checkpoint rules as-is (PROCEED required for 3+ files, migrations, configs, auth, deletions).
+
+**If Level 2 (semi-autonomous):**
+Replace the checkpoint rule with:
+"Agents work autonomously for most tasks. PROCEED confirmation is required ONLY for: deleting files or removing functionality, database migrations or schema changes, authentication or authorization logic changes, and deployment to production. All other changes execute automatically."
+
+**If Level 3 (fully autonomous):**
+Replace the checkpoint rule with:
+"Agents work fully autonomously. They execute all changes without asking for confirmation. If an agent encounters an error it cannot resolve, it pauses and reports to the user. A summary of all changes is provided when the task is complete."
+
+## Step 5: Report
+
+Tell the user what was detected and that CLAUDE.md has been generated. List the detected technologies in a clean table. Also confirm which QA monitoring and autonomy level were set up.

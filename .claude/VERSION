@@ -2,6 +2,11 @@
 
 ## Changelog
 
+### 2.0.0 (2026-03-27)
+- Autonomy levels: users choose control level during /init-project (full control, semi-autonomous, fully autonomous)
+- Semi-autonomous: agents only pause for deletions, migrations, auth, and deployment
+- Fully autonomous: agents execute everything, report summary when done
+
 ### 1.9.0 (2026-03-27)
 - Project renamed from LeadOrchestratorAgent to **ORCA** (ORchestrator Claude Agents)
 - GitHub repo: razielamir1/orca
