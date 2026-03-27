@@ -70,7 +70,7 @@ This method supports pulling future agent updates.
 
 **Step 3.2.2** — Add the agents repository as a remote:
 ```bash
-git remote add agents https://github.com/razielamir1/LeadOrchestratorAgent.git
+git remote add agents https://github.com/razielamir1/orca.git
 git fetch agents
 ```
 
@@ -673,7 +673,7 @@ Then retry the subtree command.
 git add -A && git commit -m "Save current state"
 rm -rf .claude
 git add -A && git commit -m "Remove old .claude directory"
-git remote add agents https://github.com/razielamir1/LeadOrchestratorAgent.git
+git remote add agents https://github.com/razielamir1/orca.git
 git fetch agents
 git subtree add --prefix=.claude agents main --squash
 # Then type /init-project in Claude chat

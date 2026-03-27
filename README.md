@@ -1,4 +1,4 @@
-# Lead Orchestrator Agent
+# ORCA — ORchestrator Claude Agents
 
 A multi-agent system for Claude Code featuring 15 specialized AI agents that work together as a complete development team. Each agent has its own role, tools, permissions, and persistent memory.
 
@@ -42,7 +42,7 @@ This method lets you pull future agent updates into any project.
 
 ```bash
 # Add this repo as a remote
-git remote add agents https://github.com/razielamir1/LeadOrchestratorAgent.git
+git remote add agents https://github.com/razielamir1/orca.git
 git fetch agents
 
 # Pull the .claude directory into your project
@@ -60,7 +60,7 @@ git subtree pull --prefix=.claude agents main --squash
 ### Option 3: Manual Copy
 
 ```bash
-cp -r /path/to/LeadOrchestratorAgent/.claude /path/to/your-project/
+cp -r /path/to/orca/.claude /path/to/your-project/
 ```
 
 Then type `/init-project` in Claude chat.
@@ -349,7 +349,7 @@ rm -rf .claude
 git add -A && git commit -m "Remove old .claude directory"
 
 # 3. Add the agents remote (skip if already added)
-git remote add agents https://github.com/razielamir1/LeadOrchestratorAgent.git
+git remote add agents https://github.com/razielamir1/orca.git
 git fetch agents
 
 # 4. Pull agents into the project

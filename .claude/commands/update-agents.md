@@ -8,7 +8,7 @@ git remote get-url agents 2>/dev/null
 ```
 If it fails, add the remote:
 ```bash
-git remote add agents https://github.com/razielamir1/LeadOrchestratorAgent.git
+git remote add agents https://github.com/razielamir1/orca.git
 ```
 
 2. **Save any uncommitted work:**

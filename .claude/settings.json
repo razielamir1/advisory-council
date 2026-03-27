@@ -3,7 +3,7 @@
     "allow": [],
     "deny": [],
     "additionalDirectories": [
-      "/Users/razielamir/LeadOrchestratorAgent/.claude/agent-memory"
+      "/Users/razielamir/orca/.claude/agent-memory"
     ]
   },
   "hooks": {
