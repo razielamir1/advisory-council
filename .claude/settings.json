@@ -1,10 +1,7 @@
 {
   "permissions": {
     "allow": [],
-    "deny": [],
-    "additionalDirectories": [
-      "/Users/razielamir/orca/.claude/agent-memory"
-    ]
+    "deny": []
   },
   "hooks": {
     "PreToolUse": [
@@ -13,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "case \"$CLAUDE_TOOL_INPUT\" in *'DROP '*|*'drop '*|*'TRUNCATE '*|*'truncate '*|*'DELETE FROM'*|*'delete from'*) echo 'BLOCKED: Destructive SQL operation detected. Use a migration instead.' >&2; exit 2;; *'rm -rf'*|*'rm -r /'*) echo 'BLOCKED: Recursive delete on root or broad path. Be more specific.' >&2; exit 2;; *'--force'*|*'--hard'*) echo 'BLOCKED: Force/hard operation detected. Confirm with user first.' >&2; exit 2;; esac"
+            "command": "case \"$CLAUDE_TOOL_INPUT\" in *'DROP '*|*'drop '*|*'TRUNCATE '*|*'truncate '*|*'DELETE FROM'*|*'delete from'*) echo 'BLOCKED: Destructive SQL operation detected. Use a migration instead.' >&2; exit 2;; *'rm -rf'*|*'rm -r /'*|*'rm -r '*|*'rm -fr'*) echo 'BLOCKED: Recursive delete detected. Be more specific.' >&2; exit 2;; *'git push --force'*|*'git push -f '*|*'git push -f'|*'git reset --hard'*) echo 'BLOCKED: Destructive git operation detected. Confirm with user first.' >&2; exit 2;; esac"
           }
         ]
       }

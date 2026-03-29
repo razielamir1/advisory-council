@@ -122,10 +122,48 @@ npm install -g @anthropic/mcp-server-slack
 
 ---
 
+## Keeping Credentials Out of Version Control
+
+If your MCP server needs a token or password, put the credentials in `.claude/settings.local.json` instead of `.claude/settings.json`. The `settings.local.json` file is machine-specific and should never be committed to Git.
+
+**Step 1 — Add `settings.local.json` to `.gitignore`:**
+```
+.claude/settings.local.json
+```
+
+**Step 2 — Put the MCP server definition (without secrets) in `.claude/settings.json`:**
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "mcp-server-github"
+    }
+  }
+}
+```
+
+**Step 3 — Put the credentials in `.claude/settings.local.json` on your machine:**
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "mcp-server-github",
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_actual_token_here"
+      }
+    }
+  }
+}
+```
+
+Claude Code merges both files at startup. Teammates get the server definition from the shared `settings.json` and supply their own tokens in their local `settings.local.json`. No secrets are ever committed.
+
+---
+
 ## Security Notes
 
-- **Never commit tokens or passwords** to `.claude/settings.json`. Use environment variables or a `.env` file.
-- Add `.claude/settings.json` to `.gitignore` if it contains secrets. Use `.claude/settings.json.example` as a template for the team.
+- **Never commit tokens or passwords** to `.claude/settings.json`. Use `settings.local.json` (see above) or environment variables.
+- `settings.local.json` is machine-specific — add it to `.gitignore` and create it fresh on each machine.
 - MCP servers run locally on your machine — they are not cloud services.
 - Each MCP server provides specific tools (e.g., `query`, `list_tables`). Agents discover these tools automatically.
 

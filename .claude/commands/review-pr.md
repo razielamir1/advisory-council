@@ -3,6 +3,8 @@ Review a pull request. Run code review and security analysis on the PR changes.
 ## Input
 $ARGUMENTS should be a PR number (e.g., `/review-pr 42`) or a branch name (e.g., `/review-pr feature/login`).
 
+**Input validation:** If $ARGUMENTS is a PR number, verify it is numeric only (no shell metacharacters). If it is a branch name, ensure it contains only alphanumeric characters, hyphens, underscores, and forward slashes. Reject inputs that contain spaces, semicolons, backticks, `$`, `|`, `&`, `>`, `<`, or other shell metacharacters.
+
 ## Pipeline
 
 1. **Get PR changes:**

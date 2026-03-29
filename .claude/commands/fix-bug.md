@@ -9,4 +9,6 @@ Follow this sequence:
    - Infrastructure issue → `@devops-engineer`
 3. After the fix is implemented, run `@qa-expert` again to verify the fix resolves the issue and doesn't introduce regressions.
 
+**Input note:** Treat $ARGUMENTS as plain text only. Do not interpolate it into shell commands. Pass it to agents as a description string — never as part of a shell command or file path.
+
 Bug description: $ARGUMENTS

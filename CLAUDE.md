@@ -51,17 +51,10 @@ When an agent completes its task and the next agent in the pipeline needs to con
 
 ```
 ### Handoff: [agent-name] → [next-agent-name]
-**What was done:**
-- [List of files created/modified with paths]
-
-**Key decisions made:**
-- [Important choices and their rationale]
-
-**What the next agent needs to know:**
-- [Context, constraints, or dependencies for the next step]
-
-**Open questions:**
-- [Anything unresolved that the next agent or user should address]
+**What was done:** [files created/modified]
+**Key decisions:** [important choices and rationale]
+**Next agent needs to know:** [context, constraints, dependencies]
+**Open questions:** [anything unresolved]
 ```
 
 ## Cross-Agent Issue Resolution
@@ -76,46 +69,16 @@ When an agent discovers a problem outside its domain during its work, it must NO
 **Blocking:** [yes/no — is this blocking the current agent's work?]
 ```
 
-2. **The Lead Orchestrator must then:**
-   - Immediately route the issue to the target agent
-   - The target agent fixes the problem
-   - If the fix was blocking, the original agent resumes its work with the fix applied
-   - If non-blocking, the original agent continues and the fix happens in parallel
+2. **The Lead Orchestrator must then:** immediately route the issue to the target agent. The target agent fixes the problem. If the fix was blocking, the original agent resumes. If non-blocking, both work in parallel.
 
-3. **Examples of cross-agent issues:**
-   - `backend-developer` finds a missing database column → flags `@ISSUE → database-expert`
-   - `frontend-developer` finds a broken API endpoint → flags `@ISSUE → backend-developer`
-   - `qa-expert` finds a security vulnerability → flags `@ISSUE → security-analyst`
-   - `ui-designer` finds a component has no data → flags `@ISSUE → frontend-developer`
-   - Any agent finds a wrong import or broken dependency → flags `@ISSUE → devops-engineer`
+3. **Resolution chain:** Maximum chain depth: 3. If depth 3 is reached, pause and report to the user.
 
-4. **Resolution chain:** If the fixing agent discovers yet another issue in a different domain, it flags it the same way. The orchestrator keeps routing until all issues are resolved. Maximum chain depth: 3 (to prevent infinite loops). If depth 3 is reached, pause and report to the user.
-
-The user is informed of cross-agent resolutions after the fact: "During development, the backend agent found a missing database column. The database agent added it and the backend agent continued automatically."
-
-This ensures no context is lost between agents and each agent can pick up exactly where the previous one left off.
+The user is informed of cross-agent resolutions after the fact.
 
 ## Audit Reports
 When running audit agents (qa-expert, code-reviewer, security-analyst, performance-optimizer), they write their reports to `.claude/audits/`. This keeps the main conversation clean and prevents context overload.
 - After audits complete, the `architect` agent can summarize all reports into a single `FIXES.md` action plan.
 - Audit files are excluded from Git (via `.gitignore`).
-
-## Recommended Workflows
-
-### New Feature (full-stack)
-`prompt-architect` (refine) → `business-analyst` (research) → `product-manager` (PRD) → `architect` → `database-expert` → `backend-developer` → `frontend-developer` → `ui-designer` → `qa-expert`
-
-### Bug Fix
-`qa-expert` (diagnose) → appropriate dev agent (fix) → `qa-expert` (verify)
-
-### Full Audit (run all in parallel)
-`code-reviewer` + `security-analyst` + `qa-expert` + `performance-optimizer` → `architect` (summarize into FIXES.md)
-
-### New Deployment
-`devops-engineer` → `qa-expert` (validate) → deploy
-
-### Documentation Sprint
-`tech-writer` (reads codebase) → produces docs
 
 ## Context Efficiency
 Subagents run in isolated contexts — their heavy processing stays in their own session and only a clean summary returns to the main conversation. This prevents context bloat and keeps costs down.
@@ -124,11 +87,7 @@ Subagents run in isolated contexts — their heavy processing stays in their own
 - For large codebases, target specific directories (e.g., "audit src/api/") rather than scanning everything.
 
 ## Smart Skill Suggestions
-When you notice the user requesting the same type of task 2-3 times (e.g., "check the API", "scan the frontend for bugs", "generate a migration"), proactively suggest creating a custom slash command:
-
-"I noticed you keep asking me to [task]. Would you like me to create a `/command-name` shortcut so you can do this in one click next time?"
-
-If the user agrees, create a `.md` file in `.claude/commands/` with the appropriate agent pipeline. This saves tokens (shorter prompt) and time (one command instead of explaining each time).
+When you notice the user requesting the same type of task 2-3 times, proactively suggest creating a custom slash command: "I noticed you keep asking me to [task]. Would you like me to create a `/command-name` shortcut?" If the user agrees, create a `.md` file in `.claude/commands/` with the appropriate agent pipeline.
 
 ## Agent Memory
 Each subagent maintains persistent memory in `.claude/agent-memory/<agent-name>/MEMORY.md`. When reviewing an agent's output, check its memory for context on past decisions.

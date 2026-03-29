@@ -41,7 +41,7 @@ Code Quality: 12 TODOs, 3 FIXMEs | Lint: clean
 Git:         main, clean working tree, up to date
 Last Audit:  2 days ago — 1 critical, 3 medium findings
 
-Recommendation: Run `npm audit fix` to resolve dependency vulnerabilities.
+Recommendation: Run `npm audit` to review vulnerabilities. Apply fixes manually after reviewing the report.
 ```
 
 Use ✅ for good, ⚠️ for warnings, ❌ for critical issues.

@@ -104,7 +104,7 @@ Let's walk through a real example to see the system in action.
 
 ### Step 4.1 — Open the project in VSCode
 
-Open your project folder. Claude will automatically read `CLAUDE.md` and know about all 11 agents.
+Open your project folder. Claude will automatically read `CLAUDE.md` and know about all 15 agents.
 
 ### Step 4.2 — Give a simple task
 
@@ -573,7 +573,7 @@ Subagents run in isolated contexts — their heavy processing stays in their own
 
 ## 17. Customizing for Your Project
 
-### Step 14.1 — Auto-Detect Tech Stack
+### Step 17.1 — Auto-Detect Tech Stack
 
 Type `/init-project` in the Claude chat. It scans for:
 - `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, `Gemfile`, `composer.json`
@@ -583,7 +583,7 @@ Type `/init-project` in the Claude chat. It scans for:
 - `jest.config.*`, `vitest`, `cypress/`, `playwright/`
 - `pnpm-workspace.yaml`, `nx.json`, `turbo.json`
 
-### Step 14.2 — Add a New Agent
+### Step 17.2 — Add a New Agent
 
 Create a file in `.claude/agents/` with this structure:
 
@@ -616,11 +616,11 @@ mkdir -p .claude/agent-memory/my-new-agent
 echo "# My New Agent Memory" > .claude/agent-memory/my-new-agent/MEMORY.md
 ```
 
-### Step 14.3 — Add a New Slash Command
+### Step 17.3 — Add a New Slash Command
 
 Create a file in `.claude/commands/` (e.g., `.claude/commands/my-command.md`). The file content is the prompt that runs when a user types `/my-command`. Use `$ARGUMENTS` to capture user input.
 
-### Step 14.4 — Remove an Agent
+### Step 17.4 — Remove an Agent
 
 Delete its file from `.claude/agents/` and optionally remove its memory directory.
 

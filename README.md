@@ -7,7 +7,7 @@ A multi-agent system for Claude Code featuring 15 specialized AI agents that wor
 | Agent | Role | Model | Permissions |
 |---|---|---|---|
 | **Lead Orchestrator** | Routes tasks to the right agent | opus | Full |
-| `prompt-architect` | Refines raw prompts into engineering-grade specs | opus | Read-only |
+| `prompt-architect` | Refines raw prompts into engineering-grade specs | sonnet | Read-only |
 | `business-analyst` | Market research, competitive analysis, feasibility | opus | Read + Write (docs) |
 | `product-manager` | PRDs, user stories, feature specs, product strategy | opus | Read + Write (docs) |
 | `architect` | System design, architecture, scalability | opus | Read-only (advises) |
@@ -16,12 +16,12 @@ A multi-agent system for Claude Code featuring 15 specialized AI agents that wor
 | `backend-developer` | API routes, middleware, Express | sonnet | Read + Write |
 | `database-expert` | PostgreSQL schemas, migrations, queries | sonnet | Read + Write |
 | `devops-engineer` | CI/CD, Docker, deployment | sonnet | Read + Write |
-| `code-reviewer` | Code reviews, best practices | opus | Read-only (reviews) |
+| `code-reviewer` | Code reviews, best practices | sonnet | Read-only (reviews) |
 | `security-analyst` | Security audits, OWASP, vulnerabilities | sonnet | Read-only (audits) |
 | `performance-optimizer` | Profiling, optimization, caching | sonnet | Read + Write |
 | `qa-expert` | Testing, bug hunting, coverage | sonnet | Read-only (reports) |
 | `tech-writer` | API docs, README, JSDoc, guides | sonnet | Read + Write |
-| `git-manager` | Branching, PRs, releases, merge conflicts | sonnet | Read + Write |
+| `git-manager` | Branching, PRs, releases, merge conflicts | haiku | Read + Write |
 
 **Read-only agents** (architect, code-reviewer, security-analyst, qa-expert) advise and report — they never modify your source code. They can only write to audit reports and their own memory files.
 
@@ -236,6 +236,16 @@ This means agents **learn over time** — the QA expert remembers fragile areas,
 
 Memory is **per-project**, so agents learn each project independently.
 
+## Smart Skill Suggestions
+
+The orchestrator watches for repeating patterns. When you ask for the same type of task two or three times (for example, "check the API", "scan the frontend for bugs", "generate a migration"), it proactively suggests turning that pattern into a custom slash command:
+
+> "I noticed you keep asking me to [task]. Would you like me to create a `/command-name` shortcut so you can do this in one click next time?"
+
+If you agree, the orchestrator creates a `.md` file in `.claude/commands/` with the appropriate agent pipeline. The new command then works like any built-in slash command. This reduces the effort of explaining the same task repeatedly and keeps your prompts shorter.
+
+To create a custom command manually, add a `.md` file to `.claude/commands/` with the prompt that should run when the command is typed.
+
 ## Context Efficiency
 
 Subagents run in isolated contexts — their heavy processing stays in their own session and only a clean summary returns to the main conversation. This prevents context bloat and keeps costs down.
@@ -306,6 +316,8 @@ your-project/
 ```
 
 ## Customization
+
+> Note: `CLAUDE.md` is the single source of truth for agent configuration in your project. The delegation table, autonomy settings, and project tech stack all live there. Edit it directly to change how the orchestrator behaves. Other documentation files (README, guides) describe the system but do not drive it.
 
 - **Auto-detect tech stack:** Run `/init-project` to scan your project and generate a customized `CLAUDE.md`
 - **Add a new agent:** Create a new `.md` file in `.claude/agents/` with YAML frontmatter (name, description, model, tools) and a prompt

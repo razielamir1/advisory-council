@@ -95,7 +95,7 @@ Based on the user's choice:
 Add a `PostToolUse` hook to `.claude/settings.local.json` that triggers after Bash commands containing `git commit`. The hook should instruct Claude to run the qa-expert agent in the background on the changed files.
 
 **If B or C (scheduled scan):**
-Tell the user: "To set up scheduled scans, type `/schedule` and configure a recurring `/full-audit` task."
+Tell the user: "To run scheduled scans, set up a cron job or CI pipeline (e.g., GitHub Actions scheduled workflow) that runs `/full-audit` on your preferred schedule."
 
 **If D:**
 No setup needed — just confirm QA is available on demand.
