@@ -393,14 +393,14 @@ export default function DomainSelector() {
                     className={`flex-1 p-5 rounded-xl border text-right transition-all ${
                       isSelected
                         ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
-                        : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-750'
+                        : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-indigo-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     <div className="text-xl mb-2">{opt.icon}</div>
-                    <div className={`font-semibold mb-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-800 dark:text-gray-200'}`}>
+                    <div className={`font-semibold mb-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-900 dark:text-white'}`}>
                       {opt.title}
                     </div>
-                    <div className="text-gray-500 dark:text-gray-400 text-sm">{opt.desc}</div>
+                    <div className={`text-sm ${isSelected ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-500'}`}>{opt.desc}</div>
                   </button>
                 );
               })}
