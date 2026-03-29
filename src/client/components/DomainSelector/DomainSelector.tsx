@@ -55,10 +55,16 @@ export default function DomainSelector() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (apiKey) headers['x-api-key'] = apiKey;
 
+      // Auto-add https:// if missing
+      let normalizedUrl = websiteUrl.trim();
+      if (!/^https?:\/\//i.test(normalizedUrl)) {
+        normalizedUrl = 'https://' + normalizedUrl;
+      }
+
       const res = await fetch('/api/discussion/analyze-website', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url: websiteUrl }),
+        body: JSON.stringify({ url: normalizedUrl }),
       });
 
       if (!res.ok) {
@@ -175,10 +181,10 @@ export default function DomainSelector() {
             {/* URL Input */}
             <div className="flex gap-3 mb-4">
               <input
-                type="url"
+                type="text"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="https://example.com"
+                placeholder="google.com"
                 dir="ltr"
                 className="flex-1 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-300 rounded-xl px-4 py-3 text-white dark:text-white text-gray-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
               />

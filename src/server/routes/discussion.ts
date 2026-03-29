@@ -29,18 +29,23 @@ function scheduleCleanup(id: string): void {
 
 // POST /api/discussion/analyze-website
 router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
-  const { url } = req.body;
+  let { url } = req.body;
 
   if (!url || typeof url !== 'string') {
     res.status(400).json({ error: 'URL is required.' });
     return;
   }
 
-  // Basic URL validation
+  // Auto-add https:// if missing
+  url = url.trim();
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+
   try {
     new URL(url);
   } catch {
-    res.status(400).json({ error: 'Invalid URL format.' });
+    res.status(400).json({ error: 'Invalid URL.' });
     return;
   }
 

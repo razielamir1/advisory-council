@@ -16,7 +16,7 @@ const QUICK_ACTIONS = [
   { icon: '✅', label: 'סכמו', type: 'summarize' },
 ];
 
-export default function InteractionBar({ discussionId, status, hasApiKey }: InteractionBarProps) {
+export default function InteractionBar({ discussionId, status }: InteractionBarProps) {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -25,29 +25,24 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
   async function handleSend() {
     if (!input.trim() || sending) return;
     setSending(true);
-
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       const storedKey = localStorage.getItem('advisory-council-api-key');
       if (storedKey) headers['x-api-key'] = storedKey;
-
       await fetch(`/api/discussion/${discussionId}/interact`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ type: activeType, content: input }),
       });
-
       setInput('');
-    } catch {
-      // Silently fail for now
-    } finally {
+    } catch { /* */ } finally {
       setSending(false);
     }
   }
 
   if (status === 'complete') {
     return (
-      <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/80 backdrop-blur p-4">
+      <div className="border-t border-slate-800 bg-slate-900/80 backdrop-blur p-4">
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => navigate(`/summary/${discussionId}`)}
@@ -57,7 +52,7 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
           </button>
           <button
             onClick={() => navigate(`/plan/${discussionId}`)}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
           >
             בנה תוכנית
           </button>
@@ -66,13 +61,10 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
     );
   }
 
-  if (status !== 'discussing' && status !== 'interactive') {
-    return null;
-  }
+  if (status !== 'discussing' && status !== 'interactive') return null;
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/80 backdrop-blur p-3">
-      {/* Quick action buttons */}
+    <div className="border-t border-slate-800 bg-slate-900/80 backdrop-blur p-3">
       <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
         {QUICK_ACTIONS.map((action) => (
           <button
@@ -81,7 +73,7 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all ${
               activeType === action.type
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
             }`}
           >
             <span>{action.icon}</span>
@@ -90,7 +82,6 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
         ))}
       </div>
 
-      {/* Input area */}
       <div className="flex gap-2">
         <input
           type="text"
@@ -105,21 +96,14 @@ export default function InteractionBar({ discussionId, status, hasApiKey }: Inte
             activeType === 'invite-guest' ? 'איזה מומחה להזמין?' :
             'הקלד הודעה...'
           }
-          className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white text-sm placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || sending}
-          className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-1"
+          className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
         >
-          {sending ? (
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            'שלח'
-          )}
+          {sending ? '...' : 'שלח'}
         </button>
       </div>
     </div>
