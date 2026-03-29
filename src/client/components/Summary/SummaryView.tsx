@@ -3,6 +3,42 @@ import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 
+const AGENT_ICONS: Record<string, string> = {
+  architect: '🏗️',
+  'backend-developer': '⚙️',
+  'frontend-developer': '🖥️',
+  'ui-designer': '🎨',
+  'database-expert': '🗄️',
+  'devops-engineer': '🚀',
+  'product-manager': '📋',
+  'business-analyst': '📊',
+  'security-analyst': '🔒',
+  'qa-expert': '🧪',
+  'tech-writer': '📝',
+  'prompt-architect': '💬',
+  'performance-optimizer': '⚡',
+  'git-manager': '📦',
+  caio: '🤖',
+};
+
+const AGENT_LABELS: Record<string, string> = {
+  architect: 'ארכיטקט',
+  'backend-developer': 'מפתח Backend',
+  'frontend-developer': 'מפתח Frontend',
+  'ui-designer': 'מעצב UI',
+  'database-expert': 'מומחה DB',
+  'devops-engineer': 'DevOps',
+  'product-manager': 'מנהל מוצר',
+  'business-analyst': 'אנליסט עסקי',
+  'security-analyst': 'אבטחה',
+  'qa-expert': 'בדיקות',
+  'tech-writer': 'תיעוד',
+  'prompt-architect': 'Prompt',
+  'performance-optimizer': 'ביצועים',
+  'git-manager': 'Git',
+  caio: 'פתרון AI',
+};
+
 const PRIORITY_COLORS = {
   critical: 'bg-red-500/10 text-red-400 border-red-500/20',
   high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
@@ -131,15 +167,40 @@ export default function SummaryView() {
           })}
         </div>
 
-        {/* Action Items */}
-        <h2 className="text-lg font-bold mb-4">Action Items</h2>
-        <div className="space-y-2 mb-6">
+        {/* Action Items — with agent routing */}
+        <h2 className="text-lg font-bold mb-4">Action Items — תוכנית פעולה</h2>
+        <div className="space-y-3 mb-6">
           {summary.actionItems.map((item, i) => (
-            <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border ${PRIORITY_COLORS[item.priority]}`}>
-              <span className="text-xs font-mono uppercase w-16">{item.priority}</span>
-              <span className="flex-1 text-sm">{item.action}</span>
-              <span className="text-xs opacity-60">{item.owner}</span>
-              <span className="text-xs opacity-40">{item.timeframe}</span>
+            <div key={i} className={`p-4 rounded-xl border ${PRIORITY_COLORS[item.priority]}`}>
+              <div className="flex items-start gap-3">
+                <span className="text-xs font-mono uppercase w-16 mt-0.5 flex-shrink-0">{item.priority}</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">{item.action}</div>
+                  <div className="flex items-center gap-3 text-xs opacity-70">
+                    <span>{item.owner}</span>
+                    <span>·</span>
+                    <span>{item.timeframe}</span>
+                  </div>
+                </div>
+                {item.agent && (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded-lg flex items-center gap-1">
+                      {AGENT_ICONS[item.agent] || '🤖'} {AGENT_LABELS[item.agent] || item.agent}
+                    </span>
+                    <button
+                      onClick={() => {
+                        // Copy agent command to clipboard
+                        const cmd = `@${item.agent} ${item.action}`;
+                        navigator.clipboard.writeText(cmd);
+                        alert(`הועתק ללוח:\n${cmd}\n\nהדבק ב-Claude Code כדי להפעיל את הסוכן`);
+                      }}
+                      className="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      בצע →
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -141,6 +141,7 @@ export interface ActionItem {
   priority: 'critical' | 'high' | 'medium' | 'low';
   owner: string;
   timeframe: string;
+  agent?: string;
 }
 
 export interface RiskItem {
@@ -177,6 +178,7 @@ export interface Milestone {
   estimatedWeeks: number;
   deliverables: string[];
   status: 'pending' | 'in-progress' | 'done';
+  agents?: string[];
 }
 
 export interface TeamRole {

@@ -3,16 +3,32 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
+
+const AGENT_ICONS: Record<string, string> = {
+  architect: '🏗️', 'backend-developer': '⚙️', 'frontend-developer': '🖥️',
+  'ui-designer': '🎨', 'database-expert': '🗄️', 'devops-engineer': '🚀',
+  'product-manager': '📋', 'business-analyst': '📊', 'security-analyst': '🔒',
+  'qa-expert': '🧪', 'tech-writer': '📝', 'performance-optimizer': '⚡',
+  caio: '🤖',
+};
+
+const AGENT_LABELS: Record<string, string> = {
+  architect: 'ארכיטקט', 'backend-developer': 'Backend', 'frontend-developer': 'Frontend',
+  'ui-designer': 'עיצוב UI', 'database-expert': 'DB', 'devops-engineer': 'DevOps',
+  'product-manager': 'מוצר', 'business-analyst': 'אנליזה', 'security-analyst': 'אבטחה',
+  'qa-expert': 'בדיקות', 'tech-writer': 'תיעוד', 'performance-optimizer': 'ביצועים',
+  caio: 'פתרון AI',
+};
 import type { ExecutionPlan as ExecutionPlanType, Milestone, TeamRole, BudgetItem, RiskItem } from '../../../shared/types';
 
 // Demo execution plan for now — will be AI-generated
 const DEMO_PLAN: ExecutionPlanType = {
   milestones: [
-    { id: 'm1', name: 'Validation', description: 'Validate core assumptions with potential customers', phase: 'Planning', estimatedWeeks: 3, deliverables: ['Customer interviews', 'Market survey', 'Competitor analysis'], status: 'pending' },
-    { id: 'm2', name: 'MVP Design', description: 'Design the minimum viable product', phase: 'Planning', estimatedWeeks: 2, deliverables: ['Wireframes', 'Tech stack decision', 'Architecture doc'], status: 'pending' },
-    { id: 'm3', name: 'MVP Build', description: 'Build the first working version', phase: 'Build', estimatedWeeks: 6, deliverables: ['Working product', 'Basic landing page', 'Payment integration'], status: 'pending' },
-    { id: 'm4', name: 'Beta Launch', description: 'Launch to first 50 users', phase: 'Launch', estimatedWeeks: 2, deliverables: ['Beta users onboarded', 'Feedback collected', 'Bug fixes'], status: 'pending' },
-    { id: 'm5', name: 'Growth', description: 'Scale based on beta learnings', phase: 'Scale', estimatedWeeks: 8, deliverables: ['Marketing campaigns', 'Feature iteration', 'Revenue targets'], status: 'pending' },
+    { id: 'm1', name: 'Validation', description: 'Validate core assumptions with potential customers', phase: 'Planning', estimatedWeeks: 3, deliverables: ['Customer interviews', 'Market survey', 'Competitor analysis'], status: 'pending', agents: ['business-analyst', 'product-manager'] },
+    { id: 'm2', name: 'MVP Design', description: 'Design the minimum viable product', phase: 'Planning', estimatedWeeks: 2, deliverables: ['Wireframes', 'Tech stack decision', 'Architecture doc'], status: 'pending', agents: ['architect', 'ui-designer', 'caio'] },
+    { id: 'm3', name: 'MVP Build', description: 'Build the first working version', phase: 'Build', estimatedWeeks: 6, deliverables: ['Working product', 'Basic landing page', 'Payment integration'], status: 'pending', agents: ['backend-developer', 'frontend-developer', 'database-expert'] },
+    { id: 'm4', name: 'Beta Launch', description: 'Launch to first 50 users', phase: 'Launch', estimatedWeeks: 2, deliverables: ['Beta users onboarded', 'Feedback collected', 'Bug fixes'], status: 'pending', agents: ['devops-engineer', 'qa-expert'] },
+    { id: 'm5', name: 'Growth', description: 'Scale based on beta learnings', phase: 'Scale', estimatedWeeks: 8, deliverables: ['Marketing campaigns', 'Feature iteration', 'Revenue targets'], status: 'pending', agents: ['product-manager', 'performance-optimizer'] },
   ],
   team: [
     { role: 'Technical Co-founder / Lead Developer', why: 'Build the MVP and lead technical decisions', joinAtMilestone: 'm2', type: 'full-time', skills: ['Full-stack', 'Architecture', 'DevOps'] },
@@ -142,6 +158,25 @@ export default function ExecutionPlan() {
                       </span>
                     ))}
                   </div>
+                  {/* Assigned agents */}
+                  {ms.agents && ms.agents.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-800">
+                      <span className="text-[10px] text-gray-500 ml-1">סוכנים:</span>
+                      {ms.agents.map((agent) => (
+                        <button
+                          key={agent}
+                          onClick={() => {
+                            const cmd = `/new-feature ${ms.name}: ${ms.description}`;
+                            navigator.clipboard.writeText(cmd);
+                            alert(`הועתק ללוח:\n${cmd}\n\nהדבק ב-Claude Code כדי להפעיל`);
+                          }}
+                          className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-lg hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
+                        >
+                          {AGENT_ICONS[agent] || '🤖'} {AGENT_LABELS[agent] || agent}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}

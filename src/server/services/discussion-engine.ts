@@ -361,7 +361,7 @@ Generate a structured JSON summary with this EXACT format:
     }
   ],
   "actionItems": [
-    { "action": "specific action", "priority": "critical|high|medium|low", "owner": "role/department", "timeframe": "timeline" }
+    { "action": "specific action", "priority": "critical|high|medium|low", "owner": "role/department", "timeframe": "timeline", "agent": "best matching agent from: architect|backend-developer|frontend-developer|ui-designer|database-expert|devops-engineer|product-manager|business-analyst|security-analyst|qa-expert|tech-writer|prompt-architect|performance-optimizer|git-manager|caio (for AI/no-code solutions)" }
   ],
   "risks": [
     { "risk": "description", "severity": "critical|high|medium|low", "probability": "high|medium|low", "mitigation": "how to mitigate", "flaggedBy": ["member-id"] }
