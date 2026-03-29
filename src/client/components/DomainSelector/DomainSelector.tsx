@@ -4,6 +4,7 @@ import type { Domain, CouncilMode, DiscussionLanguage } from '../../../shared/ty
 import { LANGUAGES } from '../../../shared/types';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import { useApiKey } from '../../hooks/useApiKey';
+import { useHistory } from '../../hooks/useHistory';
 import DomainCard from './DomainCard';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
@@ -14,6 +15,7 @@ export default function DomainSelector() {
   const navigate = useNavigate();
   const { state, dispatch } = useDiscussionContext();
   const { apiKey, setApiKey } = useApiKey();
+  const { addToHistory } = useHistory();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [search, setSearch] = useState('');
   const [idea, setIdea] = useState(state.idea);
@@ -121,6 +123,21 @@ export default function DomainSelector() {
       }
 
       const { discussionId } = await res.json();
+
+      // Find domain for history
+      const usedDomain = domains.find(d => d.id === domainId);
+      addToHistory({
+        id: discussionId,
+        idea: fullIdea.substring(0, 100),
+        domain: usedDomain?.nameHe || 'ייעוץ',
+        domainIcon: usedDomain?.icon || '💼',
+        mode,
+        language,
+        date: new Date().toLocaleDateString('he-IL'),
+        membersCount: 8,
+        messagesCount: 0,
+      });
+
       dispatch({ type: 'SET_IDEA', payload: fullIdea });
       dispatch({ type: 'SET_MODE', payload: mode });
       dispatch({ type: 'SET_LANGUAGE', payload: language });

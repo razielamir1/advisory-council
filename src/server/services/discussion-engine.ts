@@ -333,10 +333,14 @@ async function generateSummary(
     })
     .join('\n\n---\n\n');
 
+  const langName = LANG_NAMES[discussion.language] || 'Hebrew';
+
   const prompt = `You are the MODERATOR synthesizing a board discussion.
 
 IDEA: ${discussion.idea}
 DOMAIN: ${discussion.domain.name}
+
+CRITICAL: ALL text values in the JSON MUST be written in ${langName}. The summary is for a ${langName}-speaking audience.
 
 FULL TRANSCRIPT:
 ${transcript}

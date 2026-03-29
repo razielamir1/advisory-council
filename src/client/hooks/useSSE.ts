@@ -3,10 +3,11 @@ import type { DiscussionAction } from '../contexts/DiscussionContext';
 
 type Speed = 'fast' | 'normal' | 'slow';
 
-const SPEED_DELAYS: Record<Speed, number> = {
-  fast: 0,
-  normal: 40,
-  slow: 100,
+// Milliseconds per CHARACTER (not per token — Gemini sends big chunks)
+const SPEED_CHAR_DELAYS: Record<Speed, number> = {
+  fast: 0,    // instant
+  normal: 15, // ~66 chars/sec — readable typing
+  slow: 40,   // ~25 chars/sec — slow deliberate typing
 };
 
 export function useSSE(
@@ -18,25 +19,43 @@ export function useSSE(
   const [error, setError] = useState<string | null>(null);
   const speedRef = useRef(speed);
 
-  // Keep speed in sync without re-creating effects
   useEffect(() => { speedRef.current = speed; }, [speed]);
 
   useEffect(() => {
     if (!discussionId) return;
 
     const source = new EventSource(`/api/discussion/${discussionId}/stream`);
-    let tokenQueue: { messageId: string; token: string }[] = [];
-    let draining = false;
 
-    async function drainQueue() {
+    // Character-level queue for typing effect
+    let charQueue: { messageId: string; char: string }[] = [];
+    let draining = false;
+    let aborted = false;
+
+    async function drainChars() {
       if (draining) return;
       draining = true;
-      while (tokenQueue.length > 0) {
-        const item = tokenQueue.shift()!;
-        dispatch({ type: 'APPEND_TOKEN', payload: item });
-        const ms = SPEED_DELAYS[speedRef.current];
-        if (ms > 0) await new Promise(r => setTimeout(r, ms));
+
+      while (charQueue.length > 0 && !aborted) {
+        const delayMs = SPEED_CHAR_DELAYS[speedRef.current];
+
+        if (delayMs === 0) {
+          // Fast mode: flush everything at once
+          const batch = charQueue.splice(0);
+          const byMsg = new Map<string, string>();
+          for (const c of batch) {
+            byMsg.set(c.messageId, (byMsg.get(c.messageId) || '') + c.char);
+          }
+          for (const [messageId, token] of byMsg) {
+            dispatch({ type: 'APPEND_TOKEN', payload: { messageId, token } });
+          }
+        } else {
+          // Normal/slow: drip character by character
+          const item = charQueue.shift()!;
+          dispatch({ type: 'APPEND_TOKEN', payload: { messageId: item.messageId, token: item.char } });
+          await new Promise(r => setTimeout(r, delayMs));
+        }
       }
+
       draining = false;
     }
 
@@ -79,14 +98,19 @@ export function useSSE(
             });
             break;
 
-          case 'token':
-            tokenQueue.push({ messageId: data.messageId, token: data.token });
-            drainQueue();
+          case 'token': {
+            // Split token chunk into individual characters for typing effect
+            const chars = (data.token as string).split('');
+            for (const char of chars) {
+              charQueue.push({ messageId: data.messageId, char });
+            }
+            drainChars();
             break;
+          }
 
           case 'member-end':
-            // Flush queue and set full content
-            tokenQueue = [];
+            // Flush remaining chars and set full content
+            charQueue = [];
             draining = false;
             dispatch({
               type: 'COMPLETE_MESSAGE',
@@ -127,8 +151,9 @@ export function useSSE(
     };
 
     return () => {
+      aborted = true;
       source.close();
-      tokenQueue = [];
+      charQueue = [];
       setIsConnected(false);
     };
   }, [discussionId, dispatch]);

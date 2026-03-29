@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
+import { useHistory } from '../../hooks/useHistory';
 
 const FLOATING_ROLES = [
   { role: 'CEO', color: '#1e40af', x: 15, y: 20 },
@@ -15,6 +16,7 @@ const FLOATING_ROLES = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { history } = useHistory();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50 to-white dark:from-gray-950 dark:via-indigo-950/30 dark:to-gray-950 flex flex-col items-center justify-center relative overflow-hidden px-4">
@@ -117,6 +119,29 @@ export default function Landing() {
           </div>
         ))}
       </div>
+
+      {/* Past Discussions */}
+      {history.length > 0 && (
+        <div className="mt-16 w-full max-w-3xl z-10 px-4">
+          <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-4 text-center">דיונים קודמים</h3>
+          <div className="space-y-2">
+            {history.slice(0, 5).map((record) => (
+              <button
+                key={record.id}
+                onClick={() => navigate(`/office/${record.id}`)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-100 dark:bg-slate-800/50 hover:bg-gray-200 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-700/30 transition-colors text-right"
+              >
+                <span className="text-2xl">{record.domainIcon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{record.idea}</div>
+                  <div className="text-xs text-gray-500">{record.domain} · {record.membersCount} מומחים · {record.date}</div>
+                </div>
+                <span className="text-xs text-gray-400">→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <AccessibilityMenu />
     </div>

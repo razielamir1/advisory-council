@@ -2,7 +2,7 @@ import type { CouncilMember, Domain, CouncilMode } from '../../shared/types.js';
 
 const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>[] = [
   {
-    name: 'David Rosen',
+    name: 'Nadav Berenson',
     nickname: 'The Builder',
     role: 'CEO',
     title: 'Chief Executive Officer',
@@ -13,7 +13,7 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     avatarAccessory: 'tie',
   },
   {
-    name: 'Sarah Chen',
+    name: 'Matt Glazner',
     nickname: 'The Architect',
     role: 'CTO',
     title: 'Chief Technology Officer',
@@ -24,7 +24,7 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     avatarAccessory: 'glasses',
   },
   {
-    name: 'Michael Stern',
+    name: 'Eli Klainman',
     nickname: 'Iron CFO',
     role: 'CFO',
     title: 'Chief Financial Officer',
@@ -57,7 +57,7 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     avatarAccessory: 'tie',
   },
   {
-    name: 'Maya Goldberg',
+    name: 'Gili Harmon',
     nickname: 'The Visionary',
     role: 'CPO',
     title: 'Chief Product Officer',
@@ -68,7 +68,7 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     avatarAccessory: 'glasses',
   },
   {
-    name: 'Tom Avidan',
+    name: 'Or Navarro',
     nickname: 'The Researcher',
     role: 'CDO',
     title: 'Chief Data Officer',
@@ -76,6 +76,17 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     expertise: ['data analysis', 'market research', 'competitive intelligence', 'metrics', 'benchmarks'],
     personality: 'Fact-based, brings numbers to every discussion. "Let me check the data on that." Does real-time research for the team. Corrects gut feelings with evidence.',
     color: '#0d9488',
+    avatarAccessory: 'glasses',
+  },
+  {
+    name: 'Raziel Amir',
+    nickname: 'The Shortcut',
+    role: 'CAIO',
+    title: 'Chief AI Officer',
+    yearsExperience: 18,
+    expertise: ['AI tools', 'no-code platforms', 'automation', 'vibe-coding', 'rapid prototyping'],
+    personality: 'Practical, always finds the fastest path. "Friends, before we spend $200K on developers — let me show you what Base44/Bolt/v0 can do in 2 hours." Knows every AI builder tool. Thinks most software can be built 10x faster with AI.',
+    color: '#2563eb',
     avatarAccessory: 'glasses',
   },
 ];
@@ -88,6 +99,7 @@ const BACKGROUNDS: Record<string, string> = {
   COO: 'Scaled operations from 50 to 5,000 employees at 3 companies. Built supply chains across 12 countries. Survived 2 company-threatening operational crises. "I\'ve never seen a great idea succeed with bad operations."',
   CPO: 'Led product at 2 unicorns, one from 0 to 10M users. Killed 3 products that weren\'t working — "the hardest but most important decisions I made." Runs everything through user validation. "Ship fast, learn faster, kill mercilessly."',
   CDO: 'Built data teams at 4 companies. Found the insight that turned a failing product into a $200M business. Believes "opinions are hypotheses — data is proof." Runs competitive analysis, market sizing, and benchmarking for the board.',
+  CAIO: 'Built AI products at 3 companies before AI was trendy. Knows every no-code/low-code/AI builder on the market — Base44, Bolt, v0, Lovable, Google AI Studio, Claude, cursor. "Before you hire 5 developers, let me show you what you can build in a weekend with AI tools." Saved a company $2M by replacing a 6-month dev project with an AI-built prototype.',
 };
 
 export function buildCouncil(domain: Domain, idea: string, mode: CouncilMode): CouncilMember[] {

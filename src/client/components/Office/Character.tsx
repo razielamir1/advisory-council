@@ -19,6 +19,7 @@ const HAIR_STYLES: Record<string, { type: 'short' | 'parted' | 'slick' | 'curly'
   COO: { type: 'short', color: '#1a1a2e' },
   CPO: { type: 'parted', color: '#4a2010' },
   CDO: { type: 'short', color: '#2d2d2d' },
+  CAIO: { type: 'curly', color: '#1a1a2e' },
 };
 
 const SKIN_TONES: Record<string, string> = {
@@ -29,6 +30,7 @@ const SKIN_TONES: Record<string, string> = {
   COO: '#f0c8a0',
   CPO: '#dbb896',
   CDO: '#c8a882',
+  CAIO: '#f0c8a0',
 };
 
 export default memo(function Character({ member, position, isSpeaking, activity, seatIndex = 0, onClickMember }: CharacterProps) {
