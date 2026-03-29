@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import { useSSE } from '../../hooks/useSSE';
@@ -8,6 +9,8 @@ import ProgressBar from './ProgressBar';
 import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
 import InteractionBar from './InteractionBar';
+import DirectMessageModal from './DirectMessageModal';
+import type { CouncilMember } from '../../../shared/types';
 
 const SEAT_POSITIONS = [
   { x: 42, y: 18 },  // top center
@@ -25,6 +28,20 @@ export default function OfficeScene() {
   const navigate = useNavigate();
   const { state, dispatch } = useDiscussionContext();
   const { isConnected, error: sseError } = useSSE(id || null, dispatch);
+
+  const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
+
+  const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const storedKey = localStorage.getItem('advisory-council-api-key');
+    if (storedKey) headers['x-api-key'] = storedKey;
+
+    await fetch(`/api/discussion/${id}/interact`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ type, content, targetMemberId }),
+    });
+  }, [id]);
 
   const activeMessage = state.messages.find(
     (m) => m.memberId === state.activeSpeakerId && m.id === state.messages[state.messages.length - 1]?.id
@@ -126,6 +143,7 @@ export default function OfficeScene() {
                   isSpeaking={isSpeaking}
                   activity={charState?.activity || (isSpeaking ? 'speaking' : 'sitting')}
                   seatIndex={i}
+                  onClickMember={setSelectedMember}
                 />
                 {isSpeaking && activeMessage && (
                   <SpeechBubble
@@ -199,6 +217,15 @@ export default function OfficeScene() {
         currentPhase={state.currentPhase}
         status={state.status}
       />
+
+      {/* Direct message modal */}
+      {selectedMember && (
+        <DirectMessageModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+          onSend={handleDirectSend}
+        />
+      )}
 
       {/* Accessibility Menu */}
       <AccessibilityMenu />

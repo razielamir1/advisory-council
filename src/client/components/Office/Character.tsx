@@ -7,6 +7,7 @@ interface CharacterProps {
   isSpeaking: boolean;
   activity: string;
   seatIndex?: number;
+  onClickMember?: (member: CouncilMember) => void;
 }
 
 // Hair styles per role
@@ -27,7 +28,7 @@ const SKIN_TONES: Record<string, string> = {
   COO: '#f0c8a0',
 };
 
-export default memo(function Character({ member, position, isSpeaking, activity, seatIndex = 0 }: CharacterProps) {
+export default memo(function Character({ member, position, isSpeaking, activity, seatIndex = 0, onClickMember }: CharacterProps) {
   const animClass = isSpeaking
     ? 'animate-speaking'
     : activity === 'thinking'
@@ -43,13 +44,15 @@ export default memo(function Character({ member, position, isSpeaking, activity,
 
   return (
     <div
-      className={`absolute transition-all duration-700 ease-out group cursor-pointer ${isSpeaking ? 'z-10' : 'z-5'}`}
+      onClick={() => onClickMember?.(member)}
+      className={`absolute transition-all duration-700 ease-out group cursor-pointer ${isSpeaking ? 'z-10' : 'z-5'} hover:scale-110`}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
         transform: 'translate(-50%, -50%)',
         animation: `seatIn 0.6s ease-out ${seatIndex * 0.15}s both`,
       }}
+      title={`לחץ לדבר עם ${member.name} (${member.role})`}
     >
       {/* Glow when speaking */}
       {isSpeaking && (
