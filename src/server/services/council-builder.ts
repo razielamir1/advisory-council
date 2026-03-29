@@ -67,6 +67,17 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     color: '#7c3aed',
     avatarAccessory: 'glasses',
   },
+  {
+    name: 'Tom Avidan',
+    nickname: 'The Researcher',
+    role: 'CDO',
+    title: 'Chief Data Officer',
+    yearsExperience: 22,
+    expertise: ['data analysis', 'market research', 'competitive intelligence', 'metrics', 'benchmarks'],
+    personality: 'Fact-based, brings numbers to every discussion. "Let me check the data on that." Does real-time research for the team. Corrects gut feelings with evidence.',
+    color: '#0d9488',
+    avatarAccessory: 'glasses',
+  },
 ];
 
 const BACKGROUNDS: Record<string, string> = {
@@ -76,6 +87,7 @@ const BACKGROUNDS: Record<string, string> = {
   CMO: 'Built brands from zero to household names. Scaled customer acquisition across 40 markets. Once wasted $5M on a campaign — "the best marketing education money can buy." Obsessed with customer psychology.',
   COO: 'Scaled operations from 50 to 5,000 employees at 3 companies. Built supply chains across 12 countries. Survived 2 company-threatening operational crises. "I\'ve never seen a great idea succeed with bad operations."',
   CPO: 'Led product at 2 unicorns, one from 0 to 10M users. Killed 3 products that weren\'t working — "the hardest but most important decisions I made." Runs everything through user validation. "Ship fast, learn faster, kill mercilessly."',
+  CDO: 'Built data teams at 4 companies. Found the insight that turned a failing product into a $200M business. Believes "opinions are hypotheses — data is proof." Runs competitive analysis, market sizing, and benchmarking for the board.',
 };
 
 export function buildCouncil(domain: Domain, idea: string, mode: CouncilMode): CouncilMember[] {
