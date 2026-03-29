@@ -109,13 +109,34 @@ export function buildCouncil(domain: Domain, idea: string, mode: CouncilMode): C
   return buildCSuiteCouncil(domain, idea);
 }
 
-function buildCSuiteCouncil(domain: Domain, _idea: string): CouncilMember[] {
-  return CSUITE_TEMPLATES.map((template, i) => ({
-    ...template,
-    id: `member-${i}-${Date.now()}`,
-    domainTitle: adaptTitleToDomain(template.role, domain),
-    background: BACKGROUNDS[template.role] || 'Seasoned executive with decades of experience.',
-  }));
+function buildCSuiteCouncil(domain: Domain, idea: string): CouncilMember[] {
+  // Extract a short description of the idea for dynamic backstories
+  const ideaShort = idea.substring(0, 100).trim();
+
+  return CSUITE_TEMPLATES.map((template, i) => {
+    const baseBackground = BACKGROUNDS[template.role] || 'Seasoned executive with decades of experience.';
+
+    // CEO always has direct experience with a similar fictional company
+    let background = baseBackground;
+    if (template.role === 'CEO') {
+      background += ` Also — previously co-founded and scaled "SimilarVenture" (a fictional company in the ${domain.name} space doing something very similar to "${ideaShort}"). Knows the exact pitfalls, customer objections, and growth levers from that experience. References it often: "When we built something like this at SimilarVenture..."`;
+    }
+    // CPO has product experience in the domain
+    if (template.role === 'CPO') {
+      background += ` Previously led product at a company in the ${domain.name} space that tackled a similar challenge. Knows what users in this market actually want vs. what founders think they want.`;
+    }
+    // CAIO has built similar tools
+    if (template.role === 'CAIO') {
+      background += ` Has personally prototyped solutions similar to "${ideaShort}" using AI tools. Knows exactly which tools can handle this and which can't.`;
+    }
+
+    return {
+      ...template,
+      id: `member-${i}-${Date.now()}`,
+      domainTitle: adaptTitleToDomain(template.role, domain),
+      background,
+    };
+  });
 }
 
 function buildExpertCouncil(domain: Domain, _idea: string): CouncilMember[] {
