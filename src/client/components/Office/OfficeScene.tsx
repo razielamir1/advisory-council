@@ -30,15 +30,15 @@ export default function OfficeScene() {
   );
 
   return (
-    <div className="h-screen bg-gray-950 dark:bg-gray-950 bg-white flex">
+    <div className="h-screen bg-white dark:bg-gray-950 flex">
       {/* Office View */}
       <div className="flex-1 relative overflow-hidden">
         {/* Top bar */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
           {/* Connection indicator */}
-          <div className="flex items-center gap-2 bg-gray-900/80 dark:bg-gray-900/80 bg-white/80 backdrop-blur rounded-lg px-3 py-1.5 text-xs border border-gray-700/50 dark:border-gray-700/50 border-gray-200">
+          <div className="flex items-center gap-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur rounded-lg px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700/50">
             <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : state.status === 'error' ? 'bg-red-500' : 'bg-amber-500 animate-pulse'}`} />
-            <span className="text-gray-400 dark:text-gray-400 text-gray-600">
+            <span className="text-gray-600 dark:text-gray-400">
               {isConnected ? 'מחובר' : state.status === 'error' ? 'שגיאה' : 'מתחבר...'}
             </span>
           </div>
@@ -48,7 +48,7 @@ export default function OfficeScene() {
         {/* Back button */}
         <button
           onClick={() => navigate('/start')}
-          className="absolute top-4 right-4 z-20 bg-gray-900/80 dark:bg-gray-900/80 bg-white/80 backdrop-blur rounded-lg px-3 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-700/50 dark:border-gray-700/50 border-gray-200 transition-colors"
+          className="absolute top-4 right-4 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur rounded-lg px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700/50 transition-colors"
         >
           חזרה
         </button>
@@ -59,23 +59,23 @@ export default function OfficeScene() {
         </div>
 
         {/* Office Scene */}
-        <div className="w-full h-full relative bg-gradient-to-b from-gray-900 to-gray-950 dark:from-gray-900 dark:to-gray-950 from-gray-100 to-gray-50">
+        <div className="w-full h-full relative bg-gradient-to-b from-gray-100 to-gray-50 dark:from-gray-900 dark:to-gray-950">
           {/* Floor grid */}
-          <div className="absolute inset-0 opacity-5 dark:opacity-5 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 50px, #475569 50px, #475569 51px), repeating-linear-gradient(0deg, transparent, transparent 50px, #475569 50px, #475569 51px)' }} />
+          <div className="absolute inset-0 opacity-10 dark:opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 50px, #475569 50px, #475569 51px), repeating-linear-gradient(0deg, transparent, transparent 50px, #475569 50px, #475569 51px)' }} />
 
           {/* Boardroom Table */}
           <div
-            className="absolute border border-amber-800/30 rounded-[50%] bg-gradient-to-br from-amber-900/20 to-amber-950/20 dark:from-amber-900/20 dark:to-amber-950/20 from-amber-100/50 to-amber-200/30"
+            className="absolute border border-amber-300/40 dark:border-amber-800/30 rounded-[50%] bg-gradient-to-br from-amber-100/50 to-amber-200/30 dark:from-amber-900/20 dark:to-amber-950/20"
             style={{ left: '25%', top: '30%', width: '35%', height: '35%' }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-gray-700 dark:text-gray-700 text-gray-400 text-xs tracking-wider uppercase">Advisory Council</span>
+              <span className="text-gray-400 dark:text-gray-700 text-xs tracking-wider uppercase">Advisory Council</span>
             </div>
           </div>
 
           {/* Whiteboard */}
-          <div className="absolute right-4 top-16 w-44 h-32 bg-white/5 dark:bg-white/5 bg-gray-100 border border-gray-700/50 dark:border-gray-700/50 border-gray-300 rounded-lg p-2">
-            <div className="text-[10px] text-gray-600 dark:text-gray-600 text-gray-500 font-mono">
+          <div className="absolute right-4 top-16 w-44 h-32 bg-gray-100 dark:bg-white/5 border border-gray-300 dark:border-gray-700/50 rounded-lg p-2">
+            <div className="text-[10px] text-gray-500 dark:text-gray-600 font-mono">
               {state.currentPhase === 'research' ? (
                 <>
                   <div className="text-cyan-500">Research Notes:</div>
@@ -85,7 +85,7 @@ export default function OfficeScene() {
                 <>
                   <div className="text-gray-500">Key Points:</div>
                   {state.messages.slice(-3).map((m) => (
-                    <div key={m.id} className="truncate text-gray-600 dark:text-gray-600 text-gray-400 mt-0.5">
+                    <div key={m.id} className="truncate text-gray-400 dark:text-gray-600 mt-0.5">
                       {m.content.substring(0, 40)}...
                     </div>
                   ))}
@@ -102,10 +102,10 @@ export default function OfficeScene() {
 
           {/* Dev Room / Screens */}
           <div className="absolute right-4 bottom-8 w-40 h-24 flex flex-col gap-1">
-            <div className="flex-1 bg-gray-900/50 dark:bg-gray-900/50 bg-gray-200/80 border border-gray-800 dark:border-gray-800 border-gray-300 rounded flex items-center justify-center">
+            <div className="flex-1 bg-gray-200/80 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-800 rounded flex items-center justify-center">
               <span className="text-[9px] text-green-600 font-mono">$ research --market-data</span>
             </div>
-            <div className="flex-1 bg-gray-900/50 dark:bg-gray-900/50 bg-gray-200/80 border border-gray-800 dark:border-gray-800 border-gray-300 rounded flex items-center justify-center">
+            <div className="flex-1 bg-gray-200/80 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-800 rounded flex items-center justify-center">
               <span className="text-[9px] text-blue-600 font-mono">Analytics</span>
             </div>
           </div>
@@ -167,10 +167,10 @@ export default function OfficeScene() {
                         ))}
                       </div>
                     </div>
-                    <div className="text-gray-400 dark:text-gray-400 text-gray-600 text-lg mb-2">מכינים את חדר הישיבות...</div>
-                    <div className="text-gray-600 dark:text-gray-600 text-gray-400 text-sm">המומחים בדרך</div>
+                    <div className="text-gray-600 dark:text-gray-400 text-lg mb-2">מכינים את חדר הישיבות...</div>
+                    <div className="text-gray-400 dark:text-gray-600 text-sm">המומחים בדרך</div>
                     <div className="mt-4 flex justify-center">
-                      <div className="w-32 h-1 bg-gray-800 dark:bg-gray-800 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-32 h-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div className="h-full bg-indigo-500 rounded-full animate-pulse w-1/2" />
                       </div>
                     </div>

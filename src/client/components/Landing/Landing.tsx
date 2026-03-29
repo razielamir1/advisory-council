@@ -17,7 +17,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950/30 to-gray-950 dark:from-gray-950 dark:via-indigo-950/30 dark:to-gray-950 from-white via-indigo-50 to-white flex flex-col items-center justify-center relative overflow-hidden px-4">
+    <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50 to-white dark:from-gray-950 dark:via-indigo-950/30 dark:to-gray-950 flex flex-col items-center justify-center relative overflow-hidden px-4">
       {/* Top bar */}
       <div className="absolute top-4 left-4 z-20">
         <ThemeToggle />
@@ -46,12 +46,12 @@ export default function Landing() {
           AI-Powered Advisory Council
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+        <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
           מועצת
-          <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"> החכמים</span>
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"> החכמים</span>
         </h1>
 
-        <p className="text-xl md:text-2xl text-gray-400 mb-4">
+        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-4">
           Your Virtual Board of Directors
         </p>
 
@@ -73,7 +73,7 @@ export default function Landing() {
 
       {/* Mini office illustration */}
       <div className="mt-20 w-full max-w-2xl z-10">
-        <div className="relative bg-gray-900/50 border border-gray-800 rounded-2xl p-8 backdrop-blur">
+        <div className="relative bg-gray-100 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 backdrop-blur">
           {/* Table */}
           <div className="mx-auto w-48 h-24 bg-amber-900/30 rounded-[50%] border border-amber-800/30 flex items-center justify-center">
             <span className="text-gray-600 text-xs">שולחן ישיבות</span>
@@ -112,7 +112,7 @@ export default function Landing() {
         ].map((f) => (
           <div key={f.title} className="text-center p-6">
             <div className="text-3xl mb-3">{f.icon}</div>
-            <div className="text-white font-semibold mb-1">{f.title}</div>
+            <div className="text-gray-900 dark:text-white font-semibold mb-1">{f.title}</div>
             <div className="text-gray-500 text-sm">{f.desc}</div>
           </div>
         ))}
