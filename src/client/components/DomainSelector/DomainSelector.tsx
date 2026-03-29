@@ -380,7 +380,7 @@ export default function DomainSelector() {
         ) && (
           <div className="animate-fade-in">
             {/* Council Mode Selection */}
-            <div className="flex gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               {([
                 { id: 'csuite' as CouncilMode, title: 'הנהלה בכירה', desc: 'CEO, CTO, CFO... — 30+ שנות ניסיון כל אחד', icon: '🏢' },
                 { id: 'experts' as CouncilMode, title: 'מועצת חכמים', desc: 'מומחים אמיתיים — Sam Altman, Charlie Munger...', icon: '🧠' },

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import type { DiscussionMessage, CouncilMember, DiscussionPhase } from '../../../shared/types';
 import { DISCUSSION_PHASES } from '../../../shared/types';
 
@@ -12,12 +12,22 @@ interface DiscussionPanelProps {
 
 export default function DiscussionPanel({ messages, members, currentPhase, status, activeSpeakerId }: DiscussionPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [userScrolled, setUserScrolled] = useState(false);
 
+  // Detect if user scrolled up manually
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setUserScrolled(distFromBottom > 100);
+  }, []);
+
+  // Only auto-scroll if user is near the bottom
   useEffect(() => {
-    if (scrollRef.current) {
+    if (!userScrolled && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages.length]);
+  }, [messages.length, userScrolled]);
 
   const getMember = (id: string) => members.find((m) => m.id === id);
 
@@ -35,7 +45,7 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
   const phaseIdx = DISCUSSION_PHASES.findIndex(p => p.id === currentPhase);
 
   return (
-    <div className="w-[480px] min-w-[380px] bg-slate-950 flex flex-col h-full border-r border-slate-800">
+    <div className="w-full md:w-[480px] md:min-w-[380px] h-[40vh] md:h-full bg-slate-950 flex flex-col border-t md:border-t-0 md:border-r border-slate-800 relative order-first md:order-none">
       {/* Header */}
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div>
@@ -53,7 +63,7 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-3 relative">
         {groupedMessages.map((group, gi) => {
           const pi = DISCUSSION_PHASES.find((p) => p.id === group.phase);
           return (
@@ -147,6 +157,21 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
           </div>
         )}
       </div>
+
+      {/* Scroll to bottom button */}
+      {userScrolled && messages.length > 0 && (
+        <button
+          onClick={() => {
+            if (scrollRef.current) {
+              scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+              setUserScrolled(false);
+            }
+          }}
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded-full shadow-lg transition-colors flex items-center gap-1 z-10"
+        >
+          ↓ הודעות חדשות
+        </button>
+      )}
 
       {/* Footer */}
       <div className="p-3 border-t border-slate-800 flex items-center justify-between">

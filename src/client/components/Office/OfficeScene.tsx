@@ -48,6 +48,11 @@ export default function OfficeScene() {
   const [hoveredBubble, setHoveredBubble] = useState<string | null>(null); // member ID
   const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
 
+  // Approximate token count from messages
+  const totalChars = state.messages.reduce((s, m) => s + m.content.length, 0);
+  const approxTokens = Math.round(totalChars / 4);
+  const approxCost = (approxTokens / 1_000_000 * 0.15).toFixed(3); // Gemini Flash pricing ~$0.15/1M tokens
+
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     const storedKey = localStorage.getItem('advisory-council-api-key');
@@ -64,7 +69,7 @@ export default function OfficeScene() {
   );
 
   return (
-    <div className="h-screen bg-slate-950 flex">
+    <div className="h-screen bg-slate-950 flex flex-col md:flex-row">
       {/* Office + Interaction column */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Office area */}
@@ -98,6 +103,14 @@ export default function OfficeScene() {
                 </button>
               ))}
             </div>
+            {/* Token counter */}
+            {approxTokens > 0 && (
+              <div className="bg-slate-900/80 backdrop-blur rounded-lg px-2.5 py-1 border border-slate-700/50 text-[10px] text-slate-400 flex items-center gap-1.5">
+                <span>{approxTokens.toLocaleString()} tokens</span>
+                <span className="text-slate-600">·</span>
+                <span className="text-green-400">${approxCost}</span>
+              </div>
+            )}
           </div>
 
           <button
