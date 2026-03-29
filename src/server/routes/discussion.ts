@@ -7,20 +7,21 @@ import { DOMAINS } from '../config/domains.js';
 
 const router = Router();
 const discussions = new Map<string, DiscussionState>();
+const discussionKeys = new Map<string, string>(); // discussionId -> apiKey
 const sseClients = new Map<string, Response>();
 
 const VALID_MODES: CouncilMode[] = ['csuite', 'experts'];
 const MAX_IDEA_LENGTH = 2000;
-const SESSION_TTL_MS = 60 * 60 * 1000; // 1 hour
+const SESSION_TTL_MS = 60 * 60 * 1000;
 
 function sendSSE(res: Response, event: SSEEvent): void {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
-// Cleanup old sessions
 function scheduleCleanup(id: string): void {
   setTimeout(() => {
     discussions.delete(id);
+    discussionKeys.delete(id);
     sseClients.delete(id);
   }, SESSION_TTL_MS);
 }
@@ -30,14 +31,12 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
   const { idea, mode } = req.body;
   const domainId = req.body.domain?.id;
 
-  // Validate domain server-side
   const domain = DOMAINS.find((d) => d.id === domainId);
   if (!domain) {
     res.status(400).json({ error: 'Invalid domain.' });
     return;
   }
 
-  // Validate idea
   if (!idea || typeof idea !== 'string' || idea.trim().length < 10) {
     res.status(400).json({ error: 'Idea must be at least 10 characters.' });
     return;
@@ -47,9 +46,7 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
     return;
   }
 
-  // Validate mode
   const validMode: CouncilMode = VALID_MODES.includes(mode) ? mode : 'csuite';
-
   const discussionId = randomUUID();
 
   const discussion: DiscussionState = {
@@ -67,16 +64,27 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
   };
 
   discussions.set(discussionId, discussion);
+  // Store the API key from /start so the SSE stream can use it
+  discussionKeys.set(discussionId, (req as any).apiKey);
   scheduleCleanup(discussionId);
 
   res.json({ discussionId });
 });
 
 // GET /api/discussion/:id/stream
-router.get('/:id/stream', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const discussion = discussions.get(String(req.params.id));
+// No apiKeyMiddleware — EventSource can't send headers.
+// Auth is via the key stored at /start time.
+router.get('/:id/stream', (req: Request, res: Response): void => {
+  const id = String(req.params.id);
+  const discussion = discussions.get(id);
   if (!discussion) {
     res.status(404).json({ error: 'Discussion not found.' });
+    return;
+  }
+
+  const apiKey = discussionKeys.get(id);
+  if (!apiKey) {
+    res.status(401).json({ error: 'Session expired.' });
     return;
   }
 
@@ -87,22 +95,17 @@ router.get('/:id/stream', apiKeyMiddleware, (req: Request, res: Response): void 
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  sseClients.set(discussion.id, res);
+  sseClients.set(id, res);
 
   req.on('close', () => {
-    sseClients.delete(discussion.id);
+    sseClients.delete(id);
   });
 
-  const apiKey = (req as any).apiKey;
-  if (apiKey) {
-    runDiscussion(discussion, res, apiKey).catch((err) => {
-      sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
-      res.end();
-    });
-  } else {
-    sendSSE(res, { type: 'error', data: { message: 'API key required.' } });
+  runDiscussion(discussion, res, apiKey).catch((err) => {
+    console.error('[Discussion Error]', err);
+    sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
     res.end();
-  }
+  });
 });
 
 // POST /api/discussion/:id/interact
@@ -114,7 +117,7 @@ router.post('/:id/interact', apiKeyMiddleware, (req: Request, res: Response): vo
   }
 
   const interaction = req.body as UserInteraction;
-  res.json({ received: true, type: interaction.type });
+  res.status(501).json({ error: 'Interactive mode not yet implemented.', type: interaction.type });
 });
 
 // POST /api/discussion/:id/cancel

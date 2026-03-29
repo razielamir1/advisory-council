@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Button from '../shared/Button';
+import ThemeToggle from '../shared/ThemeToggle';
+import AccessibilityMenu from '../shared/AccessibilityMenu';
 
 const FLOATING_ROLES = [
   { role: 'CEO', color: '#1e40af', x: 15, y: 20 },
@@ -15,7 +17,11 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950/30 to-gray-950 flex flex-col items-center justify-center relative overflow-hidden px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950/30 to-gray-950 dark:from-gray-950 dark:via-indigo-950/30 dark:to-gray-950 from-white via-indigo-50 to-white flex flex-col items-center justify-center relative overflow-hidden px-4">
+      {/* Top bar */}
+      <div className="absolute top-4 left-4 z-20">
+        <ThemeToggle />
+      </div>
       {/* Floating role badges */}
       {FLOATING_ROLES.map((r, i) => (
         <div
@@ -111,6 +117,8 @@ export default function Landing() {
           </div>
         ))}
       </div>
+
+      <AccessibilityMenu />
     </div>
   );
 }
