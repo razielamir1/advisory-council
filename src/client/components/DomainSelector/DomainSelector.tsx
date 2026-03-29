@@ -8,7 +8,7 @@ import DomainCard from './DomainCard';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 
-type InputMode = 'new-idea' | 'existing-business';
+type InputMode = 'new-idea' | 'existing-business' | 'free-problem';
 
 export default function DomainSelector() {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ export default function DomainSelector() {
   const [mode, setMode] = useState<CouncilMode>(state.mode);
   const [language, setLanguage] = useState<DiscussionLanguage>(state.language);
   const [inputMode, setInputMode] = useState<InputMode>('new-idea');
+  const [freeProblem, setFreeProblem] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [websiteSummary, setWebsiteSummary] = useState('');
   const [analyzingWebsite, setAnalyzingWebsite] = useState(false);
@@ -83,11 +84,14 @@ export default function DomainSelector() {
   }
 
   async function handleStart() {
-    if (!selectedDomain) return;
-
     // Build the idea text
     let fullIdea = '';
-    if (inputMode === 'existing-business' && websiteSummary) {
+    let domainId = selectedDomain?.id;
+
+    if (inputMode === 'free-problem') {
+      fullIdea = freeProblem;
+      domainId = domainId || 'consulting'; // fallback domain
+    } else if (inputMode === 'existing-business' && websiteSummary) {
       fullIdea = `[Existing Business Analysis]\nWebsite: ${websiteUrl}\n\n${websiteSummary}`;
       if (additionalNotes.trim()) {
         fullIdea += `\n\n[Founder's Notes]\n${additionalNotes.trim()}`;
@@ -96,7 +100,7 @@ export default function DomainSelector() {
       fullIdea = idea;
     }
 
-    if (fullIdea.trim().length < 10) return;
+    if (!domainId || fullIdea.trim().length < 10) return;
     setLoading(true);
     setError('');
 
@@ -107,7 +111,7 @@ export default function DomainSelector() {
       const res = await fetch('/api/discussion/start', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ domain: { id: selectedDomain.id }, idea: fullIdea, mode, language }),
+        body: JSON.stringify({ domain: { id: domainId }, idea: fullIdea, mode, language }),
       });
 
       if (!res.ok) {
@@ -132,9 +136,10 @@ export default function DomainSelector() {
     }
   }
 
-  const canStart = inputMode === 'new-idea'
-    ? idea.trim().length >= 10
-    : websiteSummary.length > 0;
+  const canStart =
+    inputMode === 'free-problem' ? freeProblem.trim().length >= 10 :
+    inputMode === 'new-idea' ? (selectedDomain && idea.trim().length >= 10) :
+    (selectedDomain && websiteSummary.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
@@ -170,7 +175,59 @@ export default function DomainSelector() {
           >
             עסק קיים
           </button>
+          <button
+            onClick={() => setInputMode('free-problem')}
+            className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
+              inputMode === 'free-problem'
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            בעיה / שאלה
+          </button>
         </div>
+
+        {/* Free Problem Mode */}
+        {inputMode === 'free-problem' && (
+          <div className="mb-10 animate-fade-in">
+            <h1 className="text-3xl font-bold mb-2">תאר את הבעיה</h1>
+            <p className="text-gray-500 mb-6">כתוב בחופשיות — המועצה תזהה את התחום ותרכיב את הצוות המתאים.</p>
+
+            <textarea
+              value={freeProblem}
+              onChange={(e) => setFreeProblem(e.target.value)}
+              rows={6}
+              autoFocus
+              placeholder={"למשל:\n• ביקשו ממני לפתור בעיית תקשורת בין מחלקות בארגון של 200 עובדים\n• אני שוקל לעבור קריירה מהייטק לנדל\"ן\n• יש לי תקציב של 500K והשקעה בין שתי אופציות\n• צריך להחליט אם להרחיב את העסק לשוק חדש"}
+              className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-3 text-[15px] leading-relaxed"
+            />
+
+            <div className="flex items-center gap-3 text-sm text-gray-500 mb-6">
+              <span>{freeProblem.length} תווים</span>
+              {freeProblem.length > 0 && freeProblem.length < 30 && <span className="text-amber-500">כדאי לפרט יותר</span>}
+              {freeProblem.length >= 30 && <span className="text-green-500">מעולה, מספיק מידע</span>}
+            </div>
+
+            {/* Quick examples */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                'בעיית תקשורת בין מחלקות בארגון',
+                'שוקל לעבור קריירה',
+                'צריך לגייס סבב ראשון',
+                'התלבטות בין שתי הזדמנויות עסקיות',
+                'ייעוץ לגבי משא ומתן מורכב',
+              ].map((ex) => (
+                <button
+                  key={ex}
+                  onClick={() => setFreeProblem(ex)}
+                  className="text-xs bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Existing Business Mode */}
         {inputMode === 'existing-business' && (
@@ -243,25 +300,27 @@ export default function DomainSelector() {
           </>
         )}
 
-        {/* Domain Selector (shared between modes) */}
-        <input
+        {/* Domain Selector — hidden in free-problem mode */}
+        {inputMode !== 'free-problem' && <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="חפש תחום..."
           className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 mb-6 focus:outline-none focus:border-indigo-500 transition-colors"
-        />
+        />}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-10">
-          {filtered.map((d) => (
-            <DomainCard
-              key={d.id}
-              domain={d}
-              selected={selectedDomain?.id === d.id}
-              onClick={() => dispatch({ type: 'SET_DOMAIN', payload: d })}
-            />
-          ))}
-        </div>
+        {inputMode !== 'free-problem' && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-10">
+            {filtered.map((d) => (
+              <DomainCard
+                key={d.id}
+                domain={d}
+                selected={selectedDomain?.id === d.id}
+                onClick={() => dispatch({ type: 'SET_DOMAIN', payload: d })}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Idea Input (only for new idea mode) */}
         {selectedDomain && inputMode === 'new-idea' && (
@@ -297,7 +356,11 @@ export default function DomainSelector() {
         )}
 
         {/* Mode + Start (shared) */}
-        {selectedDomain && (inputMode === 'new-idea' ? idea.trim().length > 0 : websiteSummary) && (
+        {(
+          inputMode === 'free-problem' ? freeProblem.trim().length >= 10 :
+          inputMode === 'new-idea' ? (selectedDomain && idea.trim().length > 0) :
+          (selectedDomain && websiteSummary)
+        ) && (
           <div className="animate-fade-in">
             {/* Council Mode Selection */}
             <div className="flex gap-4 mb-8">
