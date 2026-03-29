@@ -29,6 +29,7 @@ export default function OfficeScene() {
   const { state, dispatch } = useDiscussionContext();
   const { isConnected, error: sseError } = useSSE(id || null, dispatch);
   const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
+  const [showKeyPoints, setShowKeyPoints] = useState(false);
 
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -89,8 +90,11 @@ export default function OfficeScene() {
               </div>
             </div>
 
-            {/* Whiteboard */}
-            <div className="absolute right-4 top-16 w-44 h-32 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2">
+            {/* Whiteboard — clickable */}
+            <button
+              onClick={() => setShowKeyPoints(true)}
+              className="absolute right-4 top-16 w-44 h-32 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 text-right cursor-pointer hover:bg-slate-800/70 hover:border-slate-600 transition-all group"
+            >
               <div className="text-[10px] text-slate-500 font-mono">
                 {state.currentPhase === 'research' ? (
                   <>
@@ -99,16 +103,22 @@ export default function OfficeScene() {
                   </>
                 ) : (
                   <>
-                    <div className="text-slate-400">Key Points:</div>
-                    {state.messages.slice(-3).map((m) => (
-                      <div key={m.id} className="truncate text-slate-600 mt-0.5">
-                        {m.content.substring(0, 40)}...
-                      </div>
-                    ))}
+                    <div className="text-slate-400 flex items-center justify-between">
+                      <span>Key Points:</span>
+                      <span className="text-slate-600 group-hover:text-slate-400 transition-colors">לחץ להרחבה →</span>
+                    </div>
+                    {state.messages.slice(-3).map((m) => {
+                      const member = state.members.find(mb => mb.id === m.memberId);
+                      return (
+                        <div key={m.id} className="truncate text-slate-600 mt-0.5">
+                          <span style={{ color: member?.color || '#6366f1' }}>{member?.role || '?'}</span>: {m.content.substring(0, 30)}...
+                        </div>
+                      );
+                    })}
                   </>
                 )}
               </div>
-            </div>
+            </button>
 
             {/* Coffee Corner */}
             <div className="absolute left-4 top-16 text-2xl flex flex-col items-center gap-1 opacity-50">
@@ -230,6 +240,76 @@ export default function OfficeScene() {
           onClose={() => setSelectedMember(null)}
           onSend={handleDirectSend}
         />
+      )}
+
+      {/* Key Points Panel */}
+      {showKeyPoints && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowKeyPoints(false)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[80vh] shadow-2xl animate-bubble-in flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-white font-bold text-lg">Key Points — נקודות מפתח</h2>
+                <p className="text-slate-400 text-xs mt-1">
+                  {state.messages.length} הודעות | שלב: {state.currentPhase}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowKeyPoints(false)}
+                className="text-slate-500 hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {state.messages.length === 0 ? (
+                <div className="text-center text-slate-500 py-8">
+                  <div className="text-3xl mb-2">📋</div>
+                  <div>הדיון טרם התחיל</div>
+                </div>
+              ) : (
+                state.messages.map((msg) => {
+                  const member = state.members.find(m => m.id === msg.memberId);
+                  if (msg.type === 'moderator') {
+                    return (
+                      <div key={msg.id} className="text-center">
+                        <span className="text-xs text-indigo-400 italic bg-indigo-500/10 px-3 py-1 rounded-full">
+                          {msg.content}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={msg.id} className="bg-slate-800/60 border border-slate-700/30 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] text-white font-bold"
+                          style={{ background: member?.color || '#6366f1' }}
+                        >
+                          {(member?.role || '?').substring(0, 2)}
+                        </div>
+                        <span className="text-sm font-semibold text-white">{member?.name || 'Unknown'}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: member?.color || '#6366f1', background: (member?.color || '#6366f1') + '20' }}>
+                          {member?.role || msg.memberId}
+                        </span>
+                        <span className="text-[9px] text-slate-600 mr-auto">{msg.phase}</span>
+                      </div>
+                      <div className="text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap">
+                        {msg.content}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Accessibility */}
