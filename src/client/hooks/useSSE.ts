@@ -28,6 +28,17 @@ export function useSSE(
         switch (type) {
           case 'phase-change':
             dispatch({ type: 'CHANGE_PHASE', payload: data.phase });
+            // First phase-change carries the members + characterStates
+            if (data.members && Array.isArray(data.members)) {
+              dispatch({
+                type: 'START_DISCUSSION',
+                payload: {
+                  id: data.discussionId || '',
+                  members: data.members,
+                  characterStates: data.characterStates || [],
+                },
+              });
+            }
             break;
           case 'member-start':
             dispatch({ type: 'SET_ACTIVE_SPEAKER', payload: data.memberId });

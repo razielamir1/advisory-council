@@ -75,11 +75,11 @@ function reducer(state: ClientDiscussionState, action: DiscussionAction): Client
     case 'START_DISCUSSION':
       return {
         ...state,
-        id: action.payload.id,
-        members: action.payload.members,
-        characterStates: action.payload.characterStates,
+        id: action.payload.id || state.id, // preserve existing id
+        members: action.payload.members.length > 0 ? action.payload.members : state.members,
+        characterStates: action.payload.characterStates.length > 0 ? action.payload.characterStates : state.characterStates,
         status: 'discussing',
-        messages: [],
+        messages: state.messages.length > 0 ? state.messages : [], // don't wipe if already streaming
         summary: null,
         error: null,
       };
