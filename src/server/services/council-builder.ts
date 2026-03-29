@@ -139,9 +139,111 @@ function buildCSuiteCouncil(domain: Domain, idea: string): CouncilMember[] {
   });
 }
 
-function buildExpertCouncil(domain: Domain, _idea: string): CouncilMember[] {
-  const experts = EXPERT_LIBRARY[domain.id] || EXPERT_LIBRARY['tech-startup']!;
-  return experts.slice(0, 5).map((expert, i) => ({
+function buildExpertCouncil(domain: Domain, idea: string): CouncilMember[] {
+  // If we have a specific library for this domain, use it
+  if (EXPERT_LIBRARY[domain.id]) {
+    return EXPERT_LIBRARY[domain.id]!.slice(0, 5).map((expert, i) => ({
+      ...expert,
+      id: `expert-${i}-${Date.now()}`,
+      domainTitle: expert.title,
+    }));
+  }
+
+  // Otherwise: build a dynamic expert council based on the idea + domain
+  // Analyze the idea to find relevant industries and pick cross-domain experts
+  const ideaLower = idea.toLowerCase();
+
+  const dynamicExperts: Omit<CouncilMember, 'id' | 'domainTitle'>[] = [];
+
+  // Always include a domain practitioner
+  dynamicExperts.push({
+    name: 'Industry Veteran',
+    nickname: 'The Insider',
+    role: 'Domain Expert',
+    title: `${domain.name} Industry Leader — 30+ years`,
+    background: `Built and led 3 major companies in the ${domain.name} space. Knows every player, every regulation, every pitfall. Has seen dozens of companies try what you're proposing — knows exactly why most failed and a few succeeded. Brings a massive network of contacts in this industry.`,
+    yearsExperience: 32,
+    expertise: [domain.name.toLowerCase(), 'industry knowledge', 'network', 'regulations'],
+    personality: `Direct insider perspective. "In ${domain.name}, what matters is..." References specific industry examples. Knows the unwritten rules.`,
+    color: '#1e40af',
+    avatarAccessory: 'tie',
+  });
+
+  // Sports / entertainment detection
+  if (ideaLower.match(/sport|nba|nfl|afl|fifa|tennis|soccer|football|athlete|team|league|esport|fitness/)) {
+    dynamicExperts.push({
+      name: 'Sports Executive',
+      nickname: 'The Commissioner',
+      role: 'Sports Industry',
+      title: 'Former VP at a Major Sports League',
+      background: 'Spent 20 years in sports management — from grassroots to professional leagues. Managed broadcast deals worth $500M+. Understands the intersection of sports, media, technology, and fan engagement. "Sports is not just entertainment — it\'s data, community, and identity."',
+      yearsExperience: 25,
+      expertise: ['sports management', 'broadcast rights', 'fan engagement', 'sports data'],
+      personality: 'Passionate about sports business. "The teams that win off the field are the ones that understand their fans as well as their players."',
+      color: '#16a34a',
+      avatarAccessory: 'tie',
+    });
+  }
+
+  // Tech detection
+  if (ideaLower.match(/tech|software|app|platform|ai|data|machine|algorithm|saas|cloud/)) {
+    dynamicExperts.push({
+      name: 'Tech Strategist',
+      nickname: 'The Disruptor',
+      role: 'Tech Expert',
+      title: 'Serial Tech Entrepreneur & Investor',
+      background: 'Founded 3 tech companies, 2 exits. Early investor in 15+ startups. Knows when to build, when to buy, and when to use no-code. "The best technology is the one you don\'t have to build."',
+      yearsExperience: 22,
+      expertise: ['tech strategy', 'startup scaling', 'product-market fit', 'AI applications'],
+      personality: 'Challenges assumptions about tech. "Before you write a line of code, prove the market exists."',
+      color: '#0891b2',
+      avatarAccessory: 'glasses',
+    });
+  }
+
+  // Finance / investment detection
+  dynamicExperts.push({
+    name: 'Investment Advisor',
+    nickname: 'The Calculator',
+    role: 'Finance Expert',
+    title: 'Managing Partner at a Venture Fund',
+    background: `Invested in 40+ companies across ${domain.name} and adjacent sectors. Managed $300M+ in assets. Knows exactly what investors look for and what makes them say no. "I've seen 1,000 pitches — 95% make the same 3 mistakes."`,
+    yearsExperience: 28,
+    expertise: ['venture capital', 'fundraising', 'valuation', 'financial modeling'],
+    personality: 'Numbers-focused. "Show me the unit economics. Everything else is a story."',
+    color: '#059669',
+    avatarAccessory: 'glasses',
+  });
+
+  // Market / customer expert
+  dynamicExperts.push({
+    name: 'Market Strategist',
+    nickname: 'The Voice of the Customer',
+    role: 'Market Expert',
+    title: `${domain.name} Market Analyst & GTM Specialist`,
+    background: `Spent 20 years studying customer behavior in ${domain.name}. Led GTM for 5 products that each reached $10M+ revenue. "Most founders build what they want, not what customers need."`,
+    yearsExperience: 24,
+    expertise: ['market research', 'customer discovery', 'go-to-market', 'pricing strategy'],
+    personality: 'Customer-obsessed. "Have you actually talked to 50 potential customers? What did they say?"',
+    color: '#ea580c',
+    avatarAccessory: 'tie',
+  });
+
+  // AI / automation expert (always relevant)
+  dynamicExperts.push({
+    name: 'Raziel Amir',
+    nickname: 'The Shortcut',
+    role: 'AI Expert',
+    title: 'AI Solutions Architect',
+    background: 'Knows every AI/no-code tool on the market — Base44, Bolt, v0, Lovable, Cursor, Claude. Has built prototypes for dozens of industries. "Before you hire 5 developers, let me show you what AI builds in a weekend."',
+    yearsExperience: 18,
+    expertise: ['AI tools', 'no-code', 'rapid prototyping', 'automation'],
+    personality: 'Practical, finds shortcuts. "Friends, this can be built in a weekend with the right tools."',
+    color: '#2563eb',
+    avatarAccessory: 'glasses',
+  });
+
+  return dynamicExperts.slice(0, 5).map((expert, i) => ({
     ...expert,
     id: `expert-${i}-${Date.now()}`,
     domainTitle: expert.title,

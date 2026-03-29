@@ -45,7 +45,7 @@ export default function OfficeScene() {
   const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
   const [showKeyPoints, setShowKeyPoints] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState<'fast' | 'normal' | 'slow'>('fast');
-  const [hoveredBubble, setHoveredBubble] = useState<{ memberId: string; message: any } | null>(null);
+  const [hoveredBubble, setHoveredBubble] = useState<string | null>(null); // member ID
   const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
 
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
@@ -185,38 +185,47 @@ export default function OfficeScene() {
                     seatIndex={i}
                     onClickMember={setSelectedMember}
                   />
-                  {isSpeaking && activeMessage && (
-                    <div
-                      onMouseEnter={() => setHoveredBubble({ memberId: member.id, message: activeMessage })}
-                      onMouseLeave={() => setHoveredBubble(null)}
-                    >
-                      <SpeechBubble
-                        content={activeMessage.content}
-                        memberName={member.name}
-                        memberRole={member.role}
-                        color={member.color}
-                        position={{
-                          x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
-                          y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
-                        }}
-                      />
-                    </div>
-                  )}
-                  {/* Keep bubble visible when hovered even after speaker changed */}
-                  {!isSpeaking && hoveredBubble?.memberId === member.id && (
-                    <div onMouseLeave={() => setHoveredBubble(null)}>
-                      <SpeechBubble
-                        content={hoveredBubble.message.content}
-                        memberName={member.name}
-                        memberRole={member.role}
-                        color={member.color}
-                        position={{
-                          x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
-                          y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
-                        }}
-                      />
-                    </div>
-                  )}
+                  {(() => {
+                    // Find last complete message from this member (for hover persistence)
+                    const lastMsg = [...state.messages].reverse().find(m => m.memberId === member.id);
+                    const bubblePos = {
+                      x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
+                      y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
+                    };
+                    const showBubble = isSpeaking && activeMessage;
+                    const showHovered = !isSpeaking && hoveredBubble === member.id && lastMsg;
+
+                    if (showBubble) {
+                      return (
+                        <div
+                          onMouseEnter={() => setHoveredBubble(member.id)}
+                          onMouseLeave={() => setHoveredBubble(null)}
+                        >
+                          <SpeechBubble
+                            content={activeMessage.content}
+                            memberName={member.name}
+                            memberRole={member.role}
+                            color={member.color}
+                            position={bubblePos}
+                          />
+                        </div>
+                      );
+                    }
+                    if (showHovered) {
+                      return (
+                        <div onMouseLeave={() => setHoveredBubble(null)}>
+                          <SpeechBubble
+                            content={lastMsg.content}
+                            memberName={member.name}
+                            memberRole={member.role}
+                            color={member.color}
+                            position={bubblePos}
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               );
             })}

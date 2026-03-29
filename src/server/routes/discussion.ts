@@ -151,7 +151,33 @@ router.post('/:id/interact', apiKeyMiddleware, (req: Request, res: Response): vo
   }
 
   const interaction = req.body as UserInteraction;
-  res.status(501).json({ error: 'Interactive mode not yet implemented.', type: interaction.type });
+  const id = String(req.params.id);
+
+  // Add user message to the discussion
+  const userMessage = {
+    id: `user-${Date.now()}`,
+    memberId: 'user',
+    phase: discussion.currentPhase,
+    content: `[${interaction.type}] ${interaction.content}`,
+    timestamp: Date.now(),
+    type: 'speech' as const,
+  };
+  discussion.messages.push(userMessage);
+
+  // Push to SSE client so it appears in the transcript
+  const client = sseClients.get(id);
+  if (client) {
+    sendSSE(client, {
+      type: 'member-start',
+      data: { memberId: 'user', messageId: userMessage.id, phase: discussion.currentPhase, messageType: 'speech' },
+    });
+    sendSSE(client, {
+      type: 'member-end',
+      data: { messageId: userMessage.id, fullContent: userMessage.content },
+    });
+  }
+
+  res.json({ received: true, messageId: userMessage.id });
 });
 
 // POST /api/discussion/:id/cancel
