@@ -324,6 +324,8 @@ export default function OfficeScene() {
       {selectedMember && (
         <DirectMessageModal
           member={selectedMember}
+          allMembers={state.members}
+          messages={state.messages}
           onClose={() => setSelectedMember(null)}
           onSend={handleDirectSend}
         />

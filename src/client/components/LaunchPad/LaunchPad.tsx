@@ -56,7 +56,7 @@ export default function LaunchPad() {
             <Button variant="ghost" size="sm" onClick={() => navigate(`/office/${id}`)}>
               חזרה למועצה
             </Button>
-            <Button size="sm" variant="secondary">הורד תוכנית (PDF)</Button>
+            <Button size="sm" variant="secondary" onClick={() => window.print()}>הורד תוכנית (PDF)</Button>
           </div>
         </div>
 
