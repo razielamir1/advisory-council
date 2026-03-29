@@ -9,14 +9,14 @@ import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
 
 const SEAT_POSITIONS = [
-  { x: 50, y: 22 },
-  { x: 68, y: 28 },
-  { x: 72, y: 45 },
-  { x: 68, y: 62 },
-  { x: 50, y: 68 },
-  { x: 32, y: 62 },
-  { x: 28, y: 45 },
-  { x: 32, y: 28 },
+  { x: 42, y: 18 },  // top center
+  { x: 62, y: 24 },  // top right
+  { x: 68, y: 44 },  // right
+  { x: 62, y: 64 },  // bottom right
+  { x: 42, y: 70 },  // bottom center
+  { x: 22, y: 64 },  // bottom left
+  { x: 16, y: 44 },  // left
+  { x: 22, y: 24 },  // top left
 ];
 
 export default function OfficeScene() {
