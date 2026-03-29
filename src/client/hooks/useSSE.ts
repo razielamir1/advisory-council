@@ -79,7 +79,9 @@ export function useSSE(
 
     source.onerror = () => {
       setIsConnected(false);
-      setError('Connection lost. Reconnecting...');
+      setError('Connection lost.');
+      source.close();
+      sourceRef.current = null;
     };
 
     return () => {

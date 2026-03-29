@@ -1,36 +1,62 @@
+import { randomUUID } from 'crypto';
 import { Router, type Request, type Response } from 'express';
-import type { DiscussionState, StartDiscussionRequest, UserInteraction, SSEEvent } from '../../shared/types.js';
+import type { DiscussionState, UserInteraction, SSEEvent, CouncilMode } from '../../shared/types.js';
 import { apiKeyMiddleware } from '../middleware/api-key.js';
 import { runDiscussion } from '../services/discussion-engine.js';
+import { DOMAINS } from '../config/domains.js';
 
 const router = Router();
 const discussions = new Map<string, DiscussionState>();
 const sseClients = new Map<string, Response>();
 
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-}
+const VALID_MODES: CouncilMode[] = ['csuite', 'experts'];
+const MAX_IDEA_LENGTH = 2000;
+const SESSION_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 function sendSSE(res: Response, event: SSEEvent): void {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
 
+// Cleanup old sessions
+function scheduleCleanup(id: string): void {
+  setTimeout(() => {
+    discussions.delete(id);
+    sseClients.delete(id);
+  }, SESSION_TTL_MS);
+}
+
 // POST /api/discussion/start
 router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const body = req.body as StartDiscussionRequest;
+  const { idea, mode } = req.body;
+  const domainId = req.body.domain?.id;
 
-  if (!body.domain || !body.idea) {
-    res.status(400).json({ error: 'Domain and idea are required.' });
+  // Validate domain server-side
+  const domain = DOMAINS.find((d) => d.id === domainId);
+  if (!domain) {
+    res.status(400).json({ error: 'Invalid domain.' });
     return;
   }
 
-  const discussionId = generateId();
+  // Validate idea
+  if (!idea || typeof idea !== 'string' || idea.trim().length < 10) {
+    res.status(400).json({ error: 'Idea must be at least 10 characters.' });
+    return;
+  }
+  if (idea.length > MAX_IDEA_LENGTH) {
+    res.status(400).json({ error: `Idea must be under ${MAX_IDEA_LENGTH} characters.` });
+    return;
+  }
+
+  // Validate mode
+  const validMode: CouncilMode = VALID_MODES.includes(mode) ? mode : 'csuite';
+
+  const discussionId = randomUUID();
 
   const discussion: DiscussionState = {
     id: discussionId,
-    domain: body.domain,
-    idea: body.idea,
-    mode: body.mode || 'csuite',
+    domain,
+    idea: idea.trim(),
+    mode: validMode,
     members: [],
     messages: [],
     characterStates: [],
@@ -41,12 +67,13 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
   };
 
   discussions.set(discussionId, discussion);
+  scheduleCleanup(discussionId);
 
   res.json({ discussionId });
 });
 
 // GET /api/discussion/:id/stream
-router.get('/:id/stream', (req: Request, res: Response): void => {
+router.get('/:id/stream', apiKeyMiddleware, (req: Request, res: Response): void => {
   const discussion = discussions.get(String(req.params.id));
   if (!discussion) {
     res.status(404).json({ error: 'Discussion not found.' });
@@ -62,20 +89,18 @@ router.get('/:id/stream', (req: Request, res: Response): void => {
 
   sseClients.set(discussion.id, res);
 
-  // Clean up on disconnect
   req.on('close', () => {
     sseClients.delete(discussion.id);
   });
 
-  // Run the discussion engine
-  const apiKey = (req as any).apiKey || process.env.ANTHROPIC_API_KEY;
+  const apiKey = (req as any).apiKey;
   if (apiKey) {
     runDiscussion(discussion, res, apiKey).catch((err) => {
-      sendSSE(res, { type: 'error', data: { message: err.message } });
+      sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
       res.end();
     });
   } else {
-    sendSSE(res, { type: 'error', data: { message: 'No API key available' } });
+    sendSSE(res, { type: 'error', data: { message: 'API key required.' } });
     res.end();
   }
 });
@@ -89,7 +114,6 @@ router.post('/:id/interact', apiKeyMiddleware, (req: Request, res: Response): vo
   }
 
   const interaction = req.body as UserInteraction;
-  // Will be handled by discussion engine
   res.json({ received: true, type: interaction.type });
 });
 

@@ -229,12 +229,19 @@ export default function ExecutionPlan() {
         {activeTab === 'risks' && (
           <div className="space-y-3">
             {plan.risks.map((risk, i) => {
-              const severityColors = { critical: 'red', high: 'orange', medium: 'yellow', low: 'green' };
-              const color = severityColors[risk.severity];
+              const severityStyles: Record<string, string> = {
+                critical: 'border-red-500/20 bg-red-500/10 text-red-400',
+                high: 'border-orange-500/20 bg-orange-500/10 text-orange-400',
+                medium: 'border-yellow-500/20 bg-yellow-500/10 text-yellow-400',
+                low: 'border-green-500/20 bg-green-500/10 text-green-400',
+              };
+              const style = severityStyles[risk.severity] || severityStyles.medium;
+              const borderClass = style.split(' ')[0];
+              const badgeClass = style.split(' ').slice(1).join(' ');
               return (
-                <Card key={i} className={`border-${color}-500/20`}>
+                <Card key={i} className={borderClass}>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-mono uppercase px-2 py-0.5 rounded bg-${color}-500/10 text-${color}-400`}>
+                    <span className={`text-xs font-mono uppercase px-2 py-0.5 rounded ${badgeClass}`}>
                       {risk.severity}
                     </span>
                     <span className="text-xs text-gray-500">Probability: {risk.probability}</span>

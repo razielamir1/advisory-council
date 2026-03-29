@@ -44,7 +44,7 @@ export default function DomainSelector() {
       const res = await fetch('/api/discussion/start', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ domain: selectedDomain, idea, mode, apiKey }),
+        body: JSON.stringify({ domain: { id: selectedDomain.id }, idea, mode }),
       });
 
       if (!res.ok) {

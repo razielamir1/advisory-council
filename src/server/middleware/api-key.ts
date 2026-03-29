@@ -5,7 +5,7 @@ export function apiKeyMiddleware(req: Request, res: Response, next: NextFunction
   const headerKey = req.headers['x-api-key'] as string | undefined;
 
   if (!envKey && !headerKey) {
-    res.status(401).json({ error: 'API key required. Set GEMINI_API_KEY or pass x-api-key header.' });
+    res.status(401).json({ error: 'API key required.' });
     return;
   }
 
