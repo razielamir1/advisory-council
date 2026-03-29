@@ -27,9 +27,10 @@ export default function OfficeScene() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { state, dispatch } = useDiscussionContext();
-  const { isConnected, error: sseError } = useSSE(id || null, dispatch);
   const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
   const [showKeyPoints, setShowKeyPoints] = useState(false);
+  const [readingSpeed, setReadingSpeed] = useState<'fast' | 'normal' | 'slow'>('fast');
+  const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
 
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -61,6 +62,26 @@ export default function OfficeScene() {
               </span>
             </div>
             <ThemeToggle />
+
+            {/* Speed control */}
+            <div className="flex items-center gap-1 bg-slate-900/80 backdrop-blur rounded-lg px-2 py-1 border border-slate-700/50">
+              {([
+                { id: 'fast' as const, label: '⚡', title: 'מהיר' },
+                { id: 'normal' as const, label: '▶', title: 'רגיל' },
+                { id: 'slow' as const, label: '🐢', title: 'איטי — לקריאה' },
+              ]).map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setReadingSpeed(s.id)}
+                  title={s.title}
+                  className={`px-1.5 py-0.5 rounded text-xs transition-all ${
+                    readingSpeed === s.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <button

@@ -362,13 +362,20 @@ Return ONLY valid JSON, no markdown code fences.`;
 
   try {
     const response = await claude.generateMessage(
-      'You are an expert moderator. Output only valid JSON.',
+      'You are an expert moderator. You MUST output ONLY raw JSON — no markdown, no code fences, no explanation. Just the JSON object.',
       prompt,
-      { model: 'gemini-2.0-flash', maxTokens: 4096 }
+      { model: 'gemini-2.0-flash', maxTokens: 8192 }
     );
 
-    // Fix member IDs in the response
-    const summary = JSON.parse(response);
+    // Strip markdown code fences if present
+    let cleaned = response.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+
+    const summary = JSON.parse(cleaned);
+
+    // Fix member IDs
     summary.memberRecommendations = (summary.memberRecommendations || []).map((rec: any, i: number) => ({
       ...rec,
       memberId: discussion.members[i]?.id || rec.memberId,
@@ -382,19 +389,49 @@ Return ONLY valid JSON, no markdown code fences.`;
       flaggedBy: o.flaggedBy?.map((_: any, i: number) => discussion.members[i]?.id) || [],
     }));
 
+    // Ensure arrays exist
+    summary.consensus = summary.consensus || [];
+    summary.dissent = summary.dissent || [];
+    summary.actionItems = summary.actionItems || [];
+    summary.risks = summary.risks || [];
+    summary.opportunities = summary.opportunities || [];
+    summary.memberRecommendations = summary.memberRecommendations || [];
+
     return summary;
-  } catch {
-    return {
-      executiveSummary: 'Summary generation failed. Please review the transcript.',
-      keyTension: 'N/A',
-      consensus: [],
-      dissent: [],
-      openQuestion: 'N/A',
-      memberRecommendations: [],
-      actionItems: [],
-      risks: [],
-      opportunities: [],
-    };
+  } catch (err) {
+    console.error('[Summary Parse Error]', err);
+    // Retry once with simpler prompt
+    try {
+      const retry = await claude.generateMessage(
+        'Output ONLY a JSON object, nothing else.',
+        `Summarize this discussion as JSON with fields: executiveSummary (string), keyTension (string), consensus (string[]), dissent (string[]), openQuestion (string), actionItems (array of {action, priority, owner, timeframe}), risks (array of {risk, severity, mitigation}), opportunities (array of {opportunity, potential, description}).\n\nDiscussion topic: ${discussion.idea}\n\nTranscript excerpt:\n${transcript.substring(0, 3000)}`,
+        { maxTokens: 4096 }
+      );
+      let cleaned = retry.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+      const s = JSON.parse(cleaned);
+      s.memberRecommendations = s.memberRecommendations || [];
+      s.consensus = s.consensus || [];
+      s.dissent = s.dissent || [];
+      s.actionItems = s.actionItems || [];
+      s.risks = s.risks || [];
+      s.opportunities = s.opportunities || [];
+      return s;
+    } catch {
+      return {
+        executiveSummary: 'הסיכום נכשל. ניתן לצפות בתמליל המלא דרך לוח ה-Key Points.',
+        keyTension: 'לא זמין',
+        consensus: [],
+        dissent: [],
+        openQuestion: 'לא זמין',
+        memberRecommendations: [],
+        actionItems: [],
+        risks: [],
+        opportunities: [],
+      };
+    }
   }
 }
 
