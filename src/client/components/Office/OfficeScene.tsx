@@ -43,6 +43,7 @@ export default function OfficeScene() {
   const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
   const [showKeyPoints, setShowKeyPoints] = useState(false);
   const [readingSpeed, setReadingSpeed] = useState<'fast' | 'normal' | 'slow'>('fast');
+  const [hoveredBubble, setHoveredBubble] = useState<{ memberId: string; message: any } | null>(null);
   const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
 
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
@@ -176,16 +177,36 @@ export default function OfficeScene() {
                     onClickMember={setSelectedMember}
                   />
                   {isSpeaking && activeMessage && (
-                    <SpeechBubble
-                      content={activeMessage.content}
-                      memberName={member.name}
-                      memberRole={member.role}
-                      color={member.color}
-                      position={{
-                        x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
-                        y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
-                      }}
-                    />
+                    <div
+                      onMouseEnter={() => setHoveredBubble({ memberId: member.id, message: activeMessage })}
+                      onMouseLeave={() => setHoveredBubble(null)}
+                    >
+                      <SpeechBubble
+                        content={activeMessage.content}
+                        memberName={member.name}
+                        memberRole={member.role}
+                        color={member.color}
+                        position={{
+                          x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
+                          y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
+                        }}
+                      />
+                    </div>
+                  )}
+                  {/* Keep bubble visible when hovered even after speaker changed */}
+                  {!isSpeaking && hoveredBubble?.memberId === member.id && (
+                    <div onMouseLeave={() => setHoveredBubble(null)}>
+                      <SpeechBubble
+                        content={hoveredBubble.message.content}
+                        memberName={member.name}
+                        memberRole={member.role}
+                        color={member.color}
+                        position={{
+                          x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
+                          y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               );
