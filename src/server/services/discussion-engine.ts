@@ -263,7 +263,18 @@ async function runPhase(
   }
 }
 
+const LANG_NAMES: Record<string, string> = {
+  he: 'Hebrew (עברית)',
+  en: 'English',
+  ar: 'Arabic (العربية)',
+  ru: 'Russian (Русский)',
+  fr: 'French (Français)',
+  es: 'Spanish (Español)',
+};
+
 function buildSystemPrompt(member: CouncilMember, discussion: DiscussionState, phasePrompt: string): string {
+  const langName = LANG_NAMES[discussion.language] || 'Hebrew';
+
   return `You are ${member.name}${member.nickname ? ` ("${member.nickname}")` : ''}, the ${member.title}.
 
 ROLE: ${member.role}
@@ -275,6 +286,8 @@ SPEAKING STYLE: ${member.personality}
 DOMAIN: ${discussion.domain.name} (${discussion.domain.nameHe})
 
 ${phasePrompt}
+
+CRITICAL — LANGUAGE: You MUST respond entirely in ${langName}. Every word of your response must be in ${langName}.
 
 RULES:
 - Speak in YOUR authentic voice — use your known communication style and mental models

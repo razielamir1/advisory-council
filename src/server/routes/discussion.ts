@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Router, type Request, type Response } from 'express';
-import type { DiscussionState, UserInteraction, SSEEvent, CouncilMode } from '../../shared/types.js';
+import type { DiscussionState, UserInteraction, SSEEvent, CouncilMode, DiscussionLanguage } from '../../shared/types.js';
 import { apiKeyMiddleware } from '../middleware/api-key.js';
 import { runDiscussion } from '../services/discussion-engine.js';
 import { readWebsite } from '../services/website-reader.js';
@@ -54,7 +54,7 @@ router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Resp
 
 // POST /api/discussion/start
 router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const { idea, mode } = req.body;
+  const { idea, mode, language } = req.body;
   const domainId = req.body.domain?.id;
 
   const domain = DOMAINS.find((d) => d.id === domainId);
@@ -73,6 +73,8 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
   }
 
   const validMode: CouncilMode = VALID_MODES.includes(mode) ? mode : 'csuite';
+  const validLangs: DiscussionLanguage[] = ['he', 'en', 'ar', 'ru', 'fr', 'es'];
+  const validLang: DiscussionLanguage = validLangs.includes(language) ? language : 'he';
   const discussionId = randomUUID();
 
   const discussion: DiscussionState = {
@@ -80,6 +82,7 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
     domain,
     idea: idea.trim(),
     mode: validMode,
+    language: validLang,
     members: [],
     messages: [],
     characterStates: [],

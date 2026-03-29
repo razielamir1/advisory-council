@@ -11,6 +11,16 @@ export interface Domain {
 
 // ===== Council =====
 export type CouncilMode = 'experts' | 'csuite';
+export type DiscussionLanguage = 'he' | 'en' | 'ar' | 'ru' | 'fr' | 'es';
+
+export const LANGUAGES: { id: DiscussionLanguage; label: string; flag: string }[] = [
+  { id: 'he', label: 'עברית', flag: '🇮🇱' },
+  { id: 'en', label: 'English', flag: '🇺🇸' },
+  { id: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { id: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { id: 'fr', label: 'Français', flag: '🇫🇷' },
+  { id: 'es', label: 'Español', flag: '🇪🇸' },
+];
 
 export interface CouncilMember {
   id: string;
@@ -76,6 +86,7 @@ export interface DiscussionState {
   domain: Domain;
   idea: string;
   mode: CouncilMode;
+  language: DiscussionLanguage;
   members: CouncilMember[];
   messages: DiscussionMessage[];
   characterStates: CharacterState[];
@@ -205,7 +216,7 @@ export interface StartDiscussionRequest {
   domain: Domain;
   idea: string;
   mode: CouncilMode;
-  apiKey?: string;
+  language?: DiscussionLanguage;
 }
 
 export interface UserInteraction {

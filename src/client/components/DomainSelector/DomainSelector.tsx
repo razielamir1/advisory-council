@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Domain, CouncilMode } from '../../../shared/types';
+import type { Domain, CouncilMode, DiscussionLanguage } from '../../../shared/types';
+import { LANGUAGES } from '../../../shared/types';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import { useApiKey } from '../../hooks/useApiKey';
 import DomainCard from './DomainCard';
@@ -17,6 +18,7 @@ export default function DomainSelector() {
   const [search, setSearch] = useState('');
   const [idea, setIdea] = useState(state.idea);
   const [mode, setMode] = useState<CouncilMode>(state.mode);
+  const [language, setLanguage] = useState<DiscussionLanguage>(state.language);
   const [inputMode, setInputMode] = useState<InputMode>('new-idea');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [websiteSummary, setWebsiteSummary] = useState('');
@@ -99,7 +101,7 @@ export default function DomainSelector() {
       const res = await fetch('/api/discussion/start', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ domain: { id: selectedDomain.id }, idea: fullIdea, mode }),
+        body: JSON.stringify({ domain: { id: selectedDomain.id }, idea: fullIdea, mode, language }),
       });
 
       if (!res.ok) {
@@ -111,6 +113,7 @@ export default function DomainSelector() {
       const { discussionId } = await res.json();
       dispatch({ type: 'SET_IDEA', payload: fullIdea });
       dispatch({ type: 'SET_MODE', payload: mode });
+      dispatch({ type: 'SET_LANGUAGE', payload: language });
       dispatch({
         type: 'START_DISCUSSION',
         payload: { id: discussionId, members: [], characterStates: [] },
@@ -315,6 +318,27 @@ export default function DomainSelector() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Language Selector */}
+            <div className="mb-8">
+              <h3 className="text-sm font-medium text-gray-300 mb-3">שפת הדיון</h3>
+              <div className="flex flex-wrap gap-2">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setLanguage(lang.id)}
+                    className={`px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
+                      language === lang.id
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                    }`}
+                  >
+                    <span>{lang.flag}</span>
+                    <span>{lang.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* API Key */}

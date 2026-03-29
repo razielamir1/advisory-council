@@ -6,6 +6,7 @@ import type {
   CharacterState,
   DiscussionPhase,
   DiscussionSummary,
+  DiscussionLanguage,
   Domain,
 } from '../../shared/types';
 
@@ -15,6 +16,7 @@ export interface ClientDiscussionState {
   domain: Domain | null;
   idea: string;
   mode: CouncilMode;
+  language: DiscussionLanguage;
   members: CouncilMember[];
   messages: DiscussionMessage[];
   characterStates: CharacterState[];
@@ -30,6 +32,7 @@ const initialState: ClientDiscussionState = {
   domain: null,
   idea: '',
   mode: 'csuite',
+  language: 'he',
   members: [],
   messages: [],
   characterStates: [],
@@ -45,6 +48,7 @@ export type DiscussionAction =
   | { type: 'SET_DOMAIN'; payload: Domain }
   | { type: 'SET_IDEA'; payload: string }
   | { type: 'SET_MODE'; payload: CouncilMode }
+  | { type: 'SET_LANGUAGE'; payload: DiscussionLanguage }
   | { type: 'START_DISCUSSION'; payload: { id: string; members: CouncilMember[]; characterStates: CharacterState[] } }
   | { type: 'ADD_MESSAGE'; payload: DiscussionMessage }
   | { type: 'APPEND_TOKEN'; payload: { messageId: string; token: string } }
@@ -66,6 +70,8 @@ function reducer(state: ClientDiscussionState, action: DiscussionAction): Client
       return { ...state, idea: action.payload };
     case 'SET_MODE':
       return { ...state, mode: action.payload };
+    case 'SET_LANGUAGE':
+      return { ...state, language: action.payload };
     case 'START_DISCUSSION':
       return {
         ...state,

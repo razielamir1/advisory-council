@@ -7,6 +7,7 @@ import DiscussionPanel from './DiscussionPanel';
 import ProgressBar from './ProgressBar';
 import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
+import InteractionBar from './InteractionBar';
 
 const SEAT_POSITIONS = [
   { x: 42, y: 18 },  // top center
@@ -31,7 +32,8 @@ export default function OfficeScene() {
 
   return (
     <div className="h-screen bg-white dark:bg-gray-950 flex">
-      {/* Office View */}
+      {/* Office View + Interaction */}
+      <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 relative overflow-hidden">
         {/* Top bar */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
@@ -180,6 +182,14 @@ export default function OfficeScene() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Interaction Bar at bottom */}
+      <InteractionBar
+        discussionId={id || ''}
+        status={state.status}
+        hasApiKey={true}
+      />
       </div>
 
       {/* Discussion Panel (right side) */}
