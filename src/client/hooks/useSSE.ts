@@ -3,11 +3,11 @@ import type { DiscussionAction } from '../contexts/DiscussionContext';
 
 type Speed = 'fast' | 'normal' | 'slow';
 
-// Milliseconds per CHARACTER (not per token — Gemini sends big chunks)
-const SPEED_CHAR_DELAYS: Record<Speed, number> = {
-  fast: 0,    // instant
-  normal: 15, // ~66 chars/sec — readable typing
-  slow: 40,   // ~25 chars/sec — slow deliberate typing
+// ms per character — FIXED rate, never speeds up
+const SPEED_MS: Record<Speed, number> = {
+  fast: 0,
+  normal: 18,
+  slow: 45,
 };
 
 export function useSSE(
@@ -26,43 +26,51 @@ export function useSSE(
 
     const source = new EventSource(`/api/discussion/${discussionId}/stream`);
 
-    // Character-level queue for typing effect
-    let charQueue: { messageId: string; char: string }[] = [];
-    let draining = false;
-    let aborted = false;
+    // Fixed-rate character display using setInterval instead of async loop
+    let charBuffer: { messageId: string; char: string }[] = [];
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    async function drainChars() {
-      if (draining) return;
-      draining = true;
-
-      while (charQueue.length > 0 && !aborted) {
-        const delayMs = SPEED_CHAR_DELAYS[speedRef.current];
-
-        if (delayMs === 0) {
-          // Fast mode: flush everything at once
-          const batch = charQueue.splice(0);
-          const byMsg = new Map<string, string>();
-          for (const c of batch) {
-            byMsg.set(c.messageId, (byMsg.get(c.messageId) || '') + c.char);
-          }
-          for (const [messageId, token] of byMsg) {
-            dispatch({ type: 'APPEND_TOKEN', payload: { messageId, token } });
-          }
-        } else {
-          // Normal/slow: drip character by character
-          const item = charQueue.shift()!;
-          dispatch({ type: 'APPEND_TOKEN', payload: { messageId: item.messageId, token: item.char } });
-          await new Promise(r => setTimeout(r, delayMs));
-        }
-      }
-
-      draining = false;
+    function startInterval() {
+      if (intervalId) return;
+      tick(); // first char immediately
+      intervalId = setInterval(tick, Math.max(speedRef.current === 'fast' ? 1 : SPEED_MS[speedRef.current], 1));
     }
 
-    source.onopen = () => {
-      setIsConnected(true);
-      setError(null);
-    };
+    function stopInterval() {
+      if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    }
+
+    function restartInterval() {
+      stopInterval();
+      if (charBuffer.length > 0) startInterval();
+    }
+
+    function tick() {
+      if (charBuffer.length === 0) { stopInterval(); return; }
+
+      const ms = SPEED_MS[speedRef.current];
+      if (ms === 0) {
+        // Fast: flush all at once
+        const all = charBuffer.splice(0);
+        const byMsg = new Map<string, string>();
+        for (const c of all) byMsg.set(c.messageId, (byMsg.get(c.messageId) || '') + c.char);
+        for (const [messageId, token] of byMsg) {
+          dispatch({ type: 'APPEND_TOKEN', payload: { messageId, token } });
+        }
+        stopInterval();
+      } else {
+        // Normal/slow: exactly 1 char per tick at fixed interval
+        const item = charBuffer.shift()!;
+        dispatch({ type: 'APPEND_TOKEN', payload: { messageId: item.messageId, token: item.char } });
+        // Adjust interval if speed changed
+        stopInterval();
+        if (charBuffer.length > 0) {
+          intervalId = setInterval(tick, SPEED_MS[speedRef.current]);
+        }
+      }
+    }
+
+    source.onopen = () => { setIsConnected(true); setError(null); };
 
     source.onmessage = (event) => {
       try {
@@ -99,19 +107,18 @@ export function useSSE(
             break;
 
           case 'token': {
-            // Split token chunk into individual characters for typing effect
             const chars = (data.token as string).split('');
             for (const char of chars) {
-              charQueue.push({ messageId: data.messageId, char });
+              charBuffer.push({ messageId: data.messageId, char });
             }
-            drainChars();
+            startInterval();
             break;
           }
 
           case 'member-end':
-            // Flush remaining chars and set full content
-            charQueue = [];
-            draining = false;
+            // Stop dripping, flush, set final content
+            charBuffer = [];
+            stopInterval();
             dispatch({
               type: 'COMPLETE_MESSAGE',
               payload: { messageId: data.messageId, fullContent: data.fullContent },
@@ -122,26 +129,20 @@ export function useSSE(
           case 'character-move':
             dispatch({ type: 'UPDATE_CHARACTER_STATE', payload: data });
             break;
-
           case 'guest-join':
             dispatch({ type: 'ADD_GUEST_MEMBER', payload: data.member });
             break;
-
           case 'side-chat':
             dispatch({ type: 'ADD_MESSAGE', payload: { ...data, type: 'side-chat' } });
             break;
-
           case 'discussion-complete':
             dispatch({ type: 'SET_SUMMARY', payload: data.summary });
             break;
-
           case 'error':
             dispatch({ type: 'SET_ERROR', payload: data.message });
             break;
         }
-      } catch {
-        // Ignore malformed events
-      }
+      } catch { /* ignore */ }
     };
 
     source.onerror = () => {
@@ -151,9 +152,9 @@ export function useSSE(
     };
 
     return () => {
-      aborted = true;
       source.close();
-      charQueue = [];
+      charBuffer = [];
+      stopInterval();
       setIsConnected(false);
     };
   }, [discussionId, dispatch]);
