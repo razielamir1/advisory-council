@@ -292,28 +292,29 @@ export default function DomainSelector() {
           <div className="animate-fade-in">
             {/* Council Mode Selection */}
             <div className="flex gap-4 mb-8">
-              <button
-                onClick={() => setMode('csuite')}
-                className={`flex-1 p-4 rounded-xl border text-right transition-all ${
-                  mode === 'csuite'
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-gray-700 dark:border-gray-700 border-gray-300 bg-gray-900 dark:bg-gray-900 bg-white hover:border-gray-600'
-                }`}
-              >
-                <div className="font-semibold mb-1">הנהלה בכירה</div>
-                <div className="text-gray-500 text-sm">CEO, CTO, CFO... — 30+ שנות ניסיון כל אחד</div>
-              </button>
-              <button
-                onClick={() => setMode('experts')}
-                className={`flex-1 p-4 rounded-xl border text-right transition-all ${
-                  mode === 'experts'
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-gray-700 dark:border-gray-700 border-gray-300 bg-gray-900 dark:bg-gray-900 bg-white hover:border-gray-600'
-                }`}
-              >
-                <div className="font-semibold mb-1">מועצת חכמים</div>
-                <div className="text-gray-500 text-sm">מומחים אמיתיים — Sam Altman, Charlie Munger...</div>
-              </button>
+              {([
+                { id: 'csuite' as CouncilMode, title: 'הנהלה בכירה', desc: 'CEO, CTO, CFO... — 30+ שנות ניסיון כל אחד', icon: '🏢' },
+                { id: 'experts' as CouncilMode, title: 'מועצת חכמים', desc: 'מומחים אמיתיים — Sam Altman, Charlie Munger...', icon: '🧠' },
+              ]).map((opt) => {
+                const isSelected = mode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setMode(opt.id)}
+                    className={`flex-1 p-5 rounded-xl border text-right transition-all ${
+                      isSelected
+                        ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
+                        : 'border-gray-600 bg-gray-800 hover:border-gray-500 hover:bg-gray-750'
+                    }`}
+                  >
+                    <div className="text-xl mb-2">{opt.icon}</div>
+                    <div className={`font-semibold mb-1 ${isSelected ? 'text-indigo-300' : 'text-gray-200'}`}>
+                      {opt.title}
+                    </div>
+                    <div className="text-gray-400 text-sm">{opt.desc}</div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* API Key */}
