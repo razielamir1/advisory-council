@@ -1,4 +1,5 @@
 import type { CouncilMember, Domain, CouncilMode } from '../../shared/types.js';
+import { GeminiService } from './gemini.js';
 
 const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>[] = [
   {
@@ -102,7 +103,10 @@ const BACKGROUNDS: Record<string, string> = {
   CAIO: 'Built AI products at 3 companies before AI was trendy. Knows every no-code/low-code/AI builder on the market — Base44, Bolt, v0, Lovable, Google AI Studio, Claude, cursor. "Before you hire 5 developers, let me show you what you can build in a weekend with AI tools." Saved a company $2M by replacing a 6-month dev project with an AI-built prototype.',
 };
 
-export function buildCouncil(domain: Domain, idea: string, mode: CouncilMode): CouncilMember[] {
+export async function buildCouncil(domain: Domain, idea: string, mode: CouncilMode, apiKey?: string): Promise<CouncilMember[]> {
+  if (mode === 'experts' && apiKey) {
+    return buildAIExpertCouncil(domain, idea, apiKey);
+  }
   if (mode === 'experts') {
     return buildExpertCouncil(domain, idea);
   }
@@ -398,4 +402,80 @@ export function buildGuestExpert(
     isGuest: true,
     invitedBy: invitedBy.id,
   };
+}
+
+// ===== AI-POWERED EXPERT BUILDER =====
+
+const EXPERT_COLORS = ['#1e40af', '#0891b2', '#059669', '#ea580c', '#7c3aed'];
+
+async function buildAIExpertCouncil(domain: Domain, idea: string, apiKey: string): Promise<CouncilMember[]> {
+  const gemini = new GeminiService(apiKey);
+
+  const prompt = `You are building an advisory council for someone with this challenge:
+
+DOMAIN: ${domain.name}
+IDEA/CHALLENGE: ${idea}
+
+Pick 5 REAL, well-known people who would be the BEST advisors for this specific topic.
+They should be actual famous people — CEOs, investors, industry leaders, athletes-turned-executives, etc.
+
+Rules:
+- Pick people who are RELEVANT to this specific idea (not generic tech billionaires unless it's a tech idea)
+- Include at least 1 person who DISAGREES with the mainstream approach (contrarian)
+- Include at least 1 person who has DONE something very similar
+- Mix disciplines — don't pick 5 people from the same field
+- For sports → include league commissioners, team owners, sports tech founders
+- For real estate → include developers, REIT managers, proptech founders
+- For food → include restaurateurs, food tech founders, celebrity chefs with business empires
+
+Return ONLY a JSON array (no markdown fences) with exactly 5 objects:
+[
+  {
+    "name": "Full Real Name",
+    "role": "Their most known title/role (keep short, e.g. 'NBA Commissioner' or 'Tesla CEO')",
+    "title": "Full title and company",
+    "background": "2-3 sentences about their career, achievements, failures, and why they're relevant to THIS idea. Reference real companies, real numbers, real events.",
+    "yearsExperience": number,
+    "expertise": ["area1", "area2", "area3"],
+    "personality": "How they speak. Use their REAL communication style. Include a signature phrase they actually use or would use. E.g. for Elon Musk: 'First principles thinker, blunt, sometimes provocative. Thinks in physics analogies.'",
+    "avatarAccessory": "glasses" or "tie"
+  }
+]`;
+
+  try {
+    const response = await gemini.generateMessage(
+      'You are an expert at identifying the most relevant advisors. Output ONLY valid JSON array, no markdown.',
+      prompt,
+      { maxTokens: 3000 }
+    );
+
+    let cleaned = response.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+
+    const experts = JSON.parse(cleaned);
+
+    if (!Array.isArray(experts) || experts.length === 0) {
+      throw new Error('Invalid response');
+    }
+
+    return experts.slice(0, 5).map((expert: any, i: number) => ({
+      id: `expert-${i}-${Date.now()}`,
+      name: expert.name || `Expert ${i + 1}`,
+      nickname: undefined,
+      role: expert.role || 'Advisor',
+      title: expert.title || expert.role || 'Expert Advisor',
+      domainTitle: expert.title || expert.role || 'Expert',
+      background: expert.background || 'Seasoned expert with decades of experience.',
+      yearsExperience: expert.yearsExperience || 25,
+      expertise: expert.expertise || [domain.name.toLowerCase()],
+      personality: expert.personality || 'Direct and experienced.',
+      color: EXPERT_COLORS[i % EXPERT_COLORS.length],
+      avatarAccessory: expert.avatarAccessory || (i % 2 === 0 ? 'glasses' : 'tie'),
+    }));
+  } catch (err) {
+    console.error('[AI Expert Builder] Failed, falling back to static:', err);
+    return buildExpertCouncil(domain, idea);
+  }
 }

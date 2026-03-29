@@ -25,8 +25,8 @@ export async function runDiscussion(
 ): Promise<void> {
   const claude = new GeminiService(apiKey);
 
-  // Build council
-  const members = buildCouncil(discussion.domain, discussion.idea, discussion.mode);
+  // Build council (async for AI-powered expert selection)
+  const members = await buildCouncil(discussion.domain, discussion.idea, discussion.mode, apiKey);
   discussion.members = members;
   discussion.status = 'discussing';
 
