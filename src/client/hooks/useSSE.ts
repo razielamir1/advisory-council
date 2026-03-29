@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DiscussionAction } from '../contexts/DiscussionContext';
 
 type Speed = 'fast' | 'normal' | 'slow';
 
 const SPEED_DELAYS: Record<Speed, number> = {
   fast: 0,
-  normal: 30,
-  slow: 80,
+  normal: 40,
+  slow: 100,
 };
 
 export function useSSE(
@@ -16,36 +16,29 @@ export function useSSE(
 ) {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sourceRef = useRef<EventSource | null>(null);
   const speedRef = useRef(speed);
-  const tokenQueueRef = useRef<{ messageId: string; token: string }[]>([]);
-  const processingRef = useRef(false);
 
-  // Keep speed ref in sync without re-creating the effect
+  // Keep speed in sync without re-creating effects
   useEffect(() => { speedRef.current = speed; }, [speed]);
-
-  const processTokenQueue = useCallback(async () => {
-    if (processingRef.current) return;
-    processingRef.current = true;
-
-    while (tokenQueueRef.current.length > 0) {
-      const item = tokenQueueRef.current.shift()!;
-      dispatch({ type: 'APPEND_TOKEN', payload: item });
-
-      const delayMs = SPEED_DELAYS[speedRef.current];
-      if (delayMs > 0) {
-        await new Promise((r) => setTimeout(r, delayMs));
-      }
-    }
-
-    processingRef.current = false;
-  }, [dispatch]);
 
   useEffect(() => {
     if (!discussionId) return;
 
     const source = new EventSource(`/api/discussion/${discussionId}/stream`);
-    sourceRef.current = source;
+    let tokenQueue: { messageId: string; token: string }[] = [];
+    let draining = false;
+
+    async function drainQueue() {
+      if (draining) return;
+      draining = true;
+      while (tokenQueue.length > 0) {
+        const item = tokenQueue.shift()!;
+        dispatch({ type: 'APPEND_TOKEN', payload: item });
+        const ms = SPEED_DELAYS[speedRef.current];
+        if (ms > 0) await new Promise(r => setTimeout(r, ms));
+      }
+      draining = false;
+    }
 
     source.onopen = () => {
       setIsConnected(true);
@@ -54,8 +47,7 @@ export function useSSE(
 
     source.onmessage = (event) => {
       try {
-        const parsed = JSON.parse(event.data);
-        const { type, data } = parsed;
+        const { type, data } = JSON.parse(event.data);
 
         switch (type) {
           case 'phase-change':
@@ -71,6 +63,7 @@ export function useSSE(
               });
             }
             break;
+
           case 'member-start':
             dispatch({ type: 'SET_ACTIVE_SPEAKER', payload: data.memberId });
             dispatch({
@@ -85,35 +78,39 @@ export function useSSE(
               },
             });
             break;
+
           case 'token':
-            // Queue tokens and process at the selected speed
-            tokenQueueRef.current.push({ messageId: data.messageId, token: data.token });
-            processTokenQueue();
+            tokenQueue.push({ messageId: data.messageId, token: data.token });
+            drainQueue();
             break;
+
           case 'member-end':
-            // Flush remaining tokens immediately
-            tokenQueueRef.current = [];
+            // Flush queue and set full content
+            tokenQueue = [];
+            draining = false;
             dispatch({
               type: 'COMPLETE_MESSAGE',
               payload: { messageId: data.messageId, fullContent: data.fullContent },
             });
             dispatch({ type: 'SET_ACTIVE_SPEAKER', payload: null });
             break;
+
           case 'character-move':
             dispatch({ type: 'UPDATE_CHARACTER_STATE', payload: data });
             break;
+
           case 'guest-join':
             dispatch({ type: 'ADD_GUEST_MEMBER', payload: data.member });
             break;
+
           case 'side-chat':
-            dispatch({
-              type: 'ADD_MESSAGE',
-              payload: { ...data, type: 'side-chat' },
-            });
+            dispatch({ type: 'ADD_MESSAGE', payload: { ...data, type: 'side-chat' } });
             break;
+
           case 'discussion-complete':
             dispatch({ type: 'SET_SUMMARY', payload: data.summary });
             break;
+
           case 'error':
             dispatch({ type: 'SET_ERROR', payload: data.message });
             break;
@@ -127,16 +124,14 @@ export function useSSE(
       setIsConnected(false);
       setError('Connection lost.');
       source.close();
-      sourceRef.current = null;
     };
 
     return () => {
       source.close();
-      sourceRef.current = null;
-      tokenQueueRef.current = [];
+      tokenQueue = [];
       setIsConnected(false);
     };
-  }, [discussionId, dispatch, processTokenQueue]);
+  }, [discussionId, dispatch]);
 
   return { isConnected, error };
 }

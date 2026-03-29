@@ -56,6 +56,17 @@ const CSUITE_TEMPLATES: Omit<CouncilMember, 'id' | 'domainTitle' | 'background'>
     color: '#6b7280',
     avatarAccessory: 'tie',
   },
+  {
+    name: 'Maya Goldberg',
+    nickname: 'The Visionary',
+    role: 'CPO',
+    title: 'Chief Product Officer',
+    yearsExperience: 26,
+    expertise: ['product strategy', 'user experience', 'product-market fit', 'roadmap prioritization'],
+    personality: 'User-obsessed, data-informed, cuts through feature creep. "If users don\'t love the core, no amount of features will save you..."',
+    color: '#7c3aed',
+    avatarAccessory: 'glasses',
+  },
 ];
 
 const BACKGROUNDS: Record<string, string> = {
@@ -64,6 +75,7 @@ const BACKGROUNDS: Record<string, string> = {
   CFO: 'Led 7 fundraising rounds totaling $600M. Managed the financial side of 2 IPOs. Caught a $30M accounting error that would have sunk a company. Believes "every dollar you spend should be an investment, not an expense."',
   CMO: 'Built brands from zero to household names. Scaled customer acquisition across 40 markets. Once wasted $5M on a campaign — "the best marketing education money can buy." Obsessed with customer psychology.',
   COO: 'Scaled operations from 50 to 5,000 employees at 3 companies. Built supply chains across 12 countries. Survived 2 company-threatening operational crises. "I\'ve never seen a great idea succeed with bad operations."',
+  CPO: 'Led product at 2 unicorns, one from 0 to 10M users. Killed 3 products that weren\'t working — "the hardest but most important decisions I made." Runs everything through user validation. "Ship fast, learn faster, kill mercilessly."',
 };
 
 export function buildCouncil(domain: Domain, idea: string, mode: CouncilMode): CouncilMember[] {

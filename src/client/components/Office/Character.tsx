@@ -17,15 +17,16 @@ const HAIR_STYLES: Record<string, { type: 'short' | 'parted' | 'slick' | 'curly'
   CFO: { type: 'parted', color: '#2d2d2d' },
   CMO: { type: 'bun', color: '#5c2d0e' },
   COO: { type: 'short', color: '#1a1a2e' },
+  CPO: { type: 'parted', color: '#4a2010' },
 };
 
-// Skin tones
 const SKIN_TONES: Record<string, string> = {
   CEO: '#f0c8a0',
   CTO: '#d4a574',
   CFO: '#f5d6b8',
   CMO: '#e8b88a',
   COO: '#f0c8a0',
+  CPO: '#dbb896',
 };
 
 export default memo(function Character({ member, position, isSpeaking, activity, seatIndex = 0, onClickMember }: CharacterProps) {

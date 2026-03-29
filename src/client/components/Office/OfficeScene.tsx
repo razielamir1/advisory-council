@@ -12,15 +12,28 @@ import InteractionBar from './InteractionBar';
 import DirectMessageModal from './DirectMessageModal';
 import type { CouncilMember } from '../../../shared/types';
 
+// Spread wider so speech bubbles don't overlap other characters
 const SEAT_POSITIONS = [
-  { x: 42, y: 18 },
-  { x: 62, y: 24 },
-  { x: 68, y: 44 },
-  { x: 62, y: 64 },
-  { x: 42, y: 70 },
-  { x: 22, y: 64 },
-  { x: 16, y: 44 },
-  { x: 22, y: 24 },
+  { x: 42, y: 14 },   // top center
+  { x: 64, y: 22 },   // top right
+  { x: 70, y: 46 },   // right
+  { x: 64, y: 70 },   // bottom right
+  { x: 42, y: 78 },   // bottom center
+  { x: 20, y: 70 },   // bottom left
+  { x: 14, y: 46 },   // left
+  { x: 20, y: 22 },   // top left
+];
+
+// Bubble offsets per seat — position bubble away from center to avoid overlap
+const BUBBLE_OFFSETS: { dx: number; dy: number }[] = [
+  { dx: 0, dy: -20 },   // top center → bubble above
+  { dx: 15, dy: -15 },  // top right → bubble to upper-right
+  { dx: 18, dy: 0 },    // right → bubble to right
+  { dx: 10, dy: 8 },    // bottom right → bubble below-right
+  { dx: 0, dy: 8 },     // bottom → bubble below
+  { dx: -15, dy: 8 },   // bottom left → bubble below-left
+  { dx: -18, dy: 0 },   // left → bubble to left
+  { dx: -15, dy: -15 }, // top left → bubble to upper-left
 ];
 
 export default function OfficeScene() {
@@ -179,7 +192,10 @@ export default function OfficeScene() {
                       memberName={member.name}
                       memberRole={member.role}
                       color={member.color}
-                      position={{ x: pos.x, y: pos.y - 18 }}
+                      position={{
+                        x: pos.x + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dx || 0),
+                        y: pos.y + (BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length]?.dy || -18),
+                      }}
                     />
                   )}
                 </div>
