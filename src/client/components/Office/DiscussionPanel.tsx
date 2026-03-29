@@ -95,17 +95,20 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
                   );
                 }
 
-                // Fallback values when member is not yet in the members array
-                const memberColor = member?.color ?? '#6366f1';
-                const memberRole = member?.role ?? msg.memberId ?? '?';
-                const memberName = member?.name ?? msg.memberId ?? 'Unknown';
+                // User messages get special styling
+                const isUser = msg.memberId === 'user';
+                const memberColor = isUser ? '#f59e0b' : (member?.color ?? '#6366f1');
+                const memberRole = isUser ? 'אתה' : (member?.role ?? '?');
+                const memberName = isUser ? 'יו"ר המועצה' : (member?.name ?? 'Unknown');
 
                 return (
                   <div key={msg.id} className={`mb-4 animate-slide-in ${isSideChat ? 'opacity-50 mr-6' : ''}`}>
                     <div className={`rounded-2xl p-4 ${
-                      isActive
-                        ? 'bg-indigo-500/10 border border-indigo-500/20'
-                        : 'bg-slate-800/60 border border-slate-700/30'
+                      isUser
+                        ? 'bg-amber-500/10 border border-amber-500/20'
+                        : isActive
+                          ? 'bg-indigo-500/10 border border-indigo-500/20'
+                          : 'bg-slate-800/60 border border-slate-700/30'
                     }`}>
                       {/* Member header */}
                       <div className="flex items-center gap-2.5 mb-2">

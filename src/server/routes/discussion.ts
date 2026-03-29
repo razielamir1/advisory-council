@@ -143,41 +143,117 @@ router.get('/:id/stream', (req: Request, res: Response): void => {
 });
 
 // POST /api/discussion/:id/interact
-router.post('/:id/interact', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const discussion = discussions.get(String(req.params.id));
+router.post('/:id/interact', apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const id = String(req.params.id);
+  const discussion = discussions.get(id);
   if (!discussion) {
     res.status(404).json({ error: 'Discussion not found.' });
     return;
   }
 
   const interaction = req.body as UserInteraction;
-  const id = String(req.params.id);
+  const apiKey = (req as any).apiKey || discussionKeys.get(id);
 
   // Add user message to the discussion
+  const userMessageId = `user-${Date.now()}`;
   const userMessage = {
-    id: `user-${Date.now()}`,
+    id: userMessageId,
     memberId: 'user',
     phase: discussion.currentPhase,
-    content: `[${interaction.type}] ${interaction.content}`,
+    content: interaction.content,
     timestamp: Date.now(),
     type: 'speech' as const,
   };
   discussion.messages.push(userMessage);
 
-  // Push to SSE client so it appears in the transcript
+  // Push user message to SSE
   const client = sseClients.get(id);
   if (client) {
     sendSSE(client, {
       type: 'member-start',
-      data: { memberId: 'user', messageId: userMessage.id, phase: discussion.currentPhase, messageType: 'speech' },
+      data: { memberId: 'user', messageId: userMessageId, phase: discussion.currentPhase, messageType: 'speech' },
     });
     sendSSE(client, {
       type: 'member-end',
-      data: { messageId: userMessage.id, fullContent: userMessage.content },
+      data: { messageId: userMessageId, fullContent: interaction.content },
     });
   }
 
-  res.json({ received: true, messageId: userMessage.id });
+  // Respond immediately to the HTTP request
+  res.json({ received: true, messageId: userMessageId });
+
+  // Now generate an AI response from the targeted member (or CEO if none specified)
+  if (!apiKey || !client) return;
+
+  const targetMember = interaction.targetMemberId
+    ? discussion.members.find(m => m.id === interaction.targetMemberId)
+    : discussion.members[0]; // default to first member (CEO)
+
+  if (!targetMember) return;
+
+  try {
+    const { GeminiService } = await import('../services/gemini.js');
+    const gemini = new GeminiService(apiKey);
+
+    const langName = { he: 'Hebrew', en: 'English', ar: 'Arabic', ru: 'Russian', fr: 'French', es: 'Spanish' }[discussion.language] || 'Hebrew';
+
+    // Build context from recent messages
+    const recentContext = discussion.messages.slice(-8).map(m => {
+      if (m.memberId === 'user') return `[Chairman/User]: ${m.content}`;
+      const member = discussion.members.find(mb => mb.id === m.memberId);
+      return `${member?.role || '?'} (${member?.name || '?'}): ${m.content}`;
+    }).join('\n\n');
+
+    const systemPrompt = `You are ${targetMember.name}, the ${targetMember.title}.
+BACKGROUND: ${targetMember.background}
+STYLE: ${targetMember.personality}
+
+The chairman of the board just addressed you directly. Respond to their ${interaction.type}.
+Be concise — 1-2 paragraphs max. Stay in character. Be direct and practical.
+Respond ENTIRELY in ${langName}.`;
+
+    const userPrompt = `IDEA: ${discussion.idea}
+
+RECENT DISCUSSION:
+${recentContext}
+
+THE CHAIRMAN SAYS TO YOU:
+${interaction.content}
+
+Respond directly to the chairman.`;
+
+    const responseMessageId = `resp-${Date.now()}`;
+
+    // Signal member is speaking
+    sendSSE(client, {
+      type: 'member-start',
+      data: { memberId: targetMember.id, messageId: responseMessageId, phase: discussion.currentPhase, messageType: 'speech' },
+    });
+
+    let fullContent = '';
+    const messages = [{ role: 'user' as const, content: userPrompt }];
+
+    for await (const token of gemini.streamMessage(systemPrompt, messages)) {
+      fullContent += token;
+      sendSSE(client, { type: 'token', data: { messageId: responseMessageId, token } });
+    }
+
+    discussion.messages.push({
+      id: responseMessageId,
+      memberId: targetMember.id,
+      phase: discussion.currentPhase,
+      content: fullContent,
+      timestamp: Date.now(),
+      type: 'speech',
+    });
+
+    sendSSE(client, {
+      type: 'member-end',
+      data: { messageId: responseMessageId, fullContent },
+    });
+  } catch (err) {
+    console.error('[Interact Response Error]', err);
+  }
 });
 
 // POST /api/discussion/:id/cancel
