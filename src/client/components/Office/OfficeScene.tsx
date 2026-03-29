@@ -10,6 +10,8 @@ import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
 import InteractionBar from './InteractionBar';
 import DirectMessageModal from './DirectMessageModal';
+import CouncilIntro from './CouncilIntro';
+import ActivityTimeline from './ActivityTimeline';
 import type { CouncilMember } from '../../../shared/types';
 
 // Spread wider so speech bubbles don't overlap other characters
@@ -155,6 +157,13 @@ export default function OfficeScene() {
               </div>
             </button>
 
+            {/* Activity Timeline — left edge */}
+            <ActivityTimeline
+              messages={state.messages}
+              members={state.members}
+              activeSpeakerId={state.activeSpeakerId}
+            />
+
             {/* Coffee Corner — subtle */}
             <div className="absolute left-4 top-16 opacity-30">
               <span className="text-lg">☕</span>
@@ -211,6 +220,11 @@ export default function OfficeScene() {
                 </div>
               );
             })}
+
+            {/* Council Intro — shows when members loaded but no messages yet */}
+            {state.members.length > 0 && state.messages.length === 0 && (
+              <CouncilIntro members={state.members} idea={state.idea} />
+            )}
 
             {/* Waiting state */}
             {state.members.length === 0 && (
