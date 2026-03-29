@@ -154,20 +154,9 @@ export default function OfficeScene() {
               </div>
             </button>
 
-            {/* Coffee Corner */}
-            <div className="absolute left-4 top-16 text-2xl flex flex-col items-center gap-1 opacity-50">
-              <span>☕</span>
-              <span className="text-[9px] text-slate-600">Break Room</span>
-            </div>
-
-            {/* Dev Room */}
-            <div className="absolute right-4 bottom-8 w-40 h-24 flex flex-col gap-1">
-              <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded flex items-center justify-center">
-                <span className="text-[9px] text-green-500 font-mono">$ research --market-data</span>
-              </div>
-              <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded flex items-center justify-center">
-                <span className="text-[9px] text-blue-400 font-mono">Analytics</span>
-              </div>
+            {/* Coffee Corner — subtle */}
+            <div className="absolute left-4 top-16 opacity-30">
+              <span className="text-lg">☕</span>
             </div>
 
             {/* Characters */}

@@ -1,144 +1,167 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
 import { useHistory } from '../../hooks/useHistory';
 
-const FLOATING_ROLES = [
-  { role: 'CEO', color: '#1e40af', x: 15, y: 20 },
-  { role: 'CTO', color: '#0891b2', x: 75, y: 15 },
-  { role: 'CFO', color: '#059669', x: 85, y: 55 },
-  { role: 'CMO', color: '#ea580c', x: 10, y: 60 },
-  { role: 'COO', color: '#6b7280', x: 50, y: 75 },
-  { role: 'CPO', color: '#7c3aed', x: 25, y: 80 },
-  { role: 'CSO', color: '#9333ea', x: 70, y: 80 },
+const COUNCIL_MEMBERS = [
+  { role: 'CEO', name: 'Nadav B.', color: '#1e40af' },
+  { role: 'CTO', name: 'Matt G.', color: '#0891b2' },
+  { role: 'CFO', name: 'Eli K.', color: '#059669' },
+  { role: 'CPO', name: 'Gili H.', color: '#7c3aed' },
+  { role: 'CMO', name: 'Noa L.', color: '#ea580c' },
+  { role: 'COO', name: 'Daniel K.', color: '#6b7280' },
+  { role: 'CDO', name: 'Or N.', color: '#0d9488' },
+  { role: 'CAIO', name: 'Raziel A.', color: '#2563eb' },
 ];
 
 export default function Landing() {
   const navigate = useNavigate();
   const { history } = useHistory();
+  const [showHow, setShowHow] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50 to-white dark:from-gray-950 dark:via-indigo-950/30 dark:to-gray-950 flex flex-col items-center justify-center relative overflow-hidden px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col relative">
       {/* Top bar */}
-      <div className="absolute top-4 left-4 z-20">
+      <div className="absolute top-5 left-5 z-20">
         <ThemeToggle />
       </div>
-      {/* Floating role badges */}
-      {FLOATING_ROLES.map((r, i) => (
-        <div
-          key={r.role}
-          className="absolute opacity-15 text-sm font-bold rounded-full px-3 py-1 border animate-breathe"
-          style={{
-            left: `${r.x}%`,
-            top: `${r.y}%`,
-            borderColor: r.color,
-            color: r.color,
-            animationDelay: `${i * 0.5}s`,
-          }}
-        >
-          {r.role}
+
+      {/* Hero section */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-16 pb-8">
+        <div className="text-center max-w-2xl">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-600 dark:text-indigo-400 text-sm mb-8">
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            Advisory Council
+          </div>
+
+          {/* Title */}
+          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-4 leading-[1.1]">
+            מועצת
+            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"> החכמים</span>
+          </h1>
+
+          <p className="text-lg text-gray-500 dark:text-gray-400 mb-3">
+            Your Virtual Board of Directors
+          </p>
+
+          <p className="text-gray-500 dark:text-gray-500 mb-10 max-w-lg mx-auto leading-relaxed">
+            הציגו רעיון, בעיה או עסק קיים — ומועצה של 8 מומחים בכירים תדון, תאתגר ותייעץ. דיון אמיתי, לא ריצוי.
+          </p>
+
+          {/* CTA */}
+          <div className="flex flex-col items-center gap-3">
+            <Button size="lg" onClick={() => navigate('/start')} className="text-lg px-10">
+              כנס את המועצה
+            </Button>
+            <button
+              onClick={() => setShowHow(true)}
+              className="text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-500 transition-colors"
+            >
+              איך זה עובד?
+            </button>
+          </div>
         </div>
-      ))}
 
-      {/* Hero */}
-      <div className="text-center max-w-3xl z-10">
-        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-600 dark:text-indigo-400 text-sm mb-8">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          AI-Powered Advisory Council
+        {/* Council members strip */}
+        <div className="mt-14 flex items-center gap-5 flex-wrap justify-center max-w-2xl">
+          {COUNCIL_MEMBERS.map((m, i) => (
+            <div
+              key={m.role}
+              className="flex flex-col items-center gap-1.5 animate-fade-in"
+              style={{ animationDelay: `${i * 0.08}s` }}
+            >
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center text-white text-[11px] font-bold shadow-lg"
+                style={{ background: m.color, boxShadow: `0 4px 15px ${m.color}30` }}
+              >
+                {m.role.substring(0, 2)}
+              </div>
+              <div className="text-[10px] text-gray-500 dark:text-gray-500 font-medium">{m.role}</div>
+              <div className="text-[9px] text-gray-400 dark:text-gray-600">{m.name}</div>
+            </div>
+          ))}
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-          מועצת
-          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"> החכמים</span>
-        </h1>
-
-        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-4">
-          Your Virtual Board of Directors
-        </p>
-
-        <p className="text-gray-600 dark:text-gray-500 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
-          הציגו רעיון, בחרו תחום — ומועצה של מומחים בכירים תדון, תאתגר, תחקור ותייעץ.
-          <br />
-          דיון אמיתי. ספקנות מקצועית. לא ריצוי.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate('/start')} className="text-lg">
-            כנס את המועצה
-          </Button>
-          <Button variant="ghost" size="lg" onClick={() => navigate('/start')} className="text-lg">
-            איך זה עובד?
-          </Button>
+        {/* Features row */}
+        <div className="mt-14 grid grid-cols-3 gap-8 max-w-xl w-full">
+          {[
+            { icon: '🎯', title: '8 מומחים', desc: '30+ שנות ניסיון כל אחד' },
+            { icon: '⚔️', title: 'ספקנות', desc: 'חולקים ומאתגרים, לא מרצים' },
+            { icon: '🚀', title: 'לביצוע', desc: 'תוכנית, צוות, תקציב' },
+          ].map((f) => (
+            <div key={f.title} className="text-center">
+              <div className="text-2xl mb-2">{f.icon}</div>
+              <div className="text-gray-800 dark:text-gray-200 font-semibold text-sm">{f.title}</div>
+              <div className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">{f.desc}</div>
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* Mini office illustration — always dark boardroom */}
-      <div className="mt-20 w-full max-w-2xl z-10">
-        <div className="relative bg-slate-900 border border-slate-700 rounded-2xl p-8">
-          {/* Table */}
-          <div className="mx-auto w-48 h-24 bg-amber-900/40 rounded-[50%] border border-amber-700/50 flex items-center justify-center">
-            <span className="text-slate-400 text-xs">שולחן ישיבות</span>
-          </div>
-          {/* Mini characters around table */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1">
-            <div className="w-6 h-6 rounded-full bg-blue-800 border-2 border-blue-400" title="CEO" />
-          </div>
-          <div className="absolute top-1/2 right-6 -translate-y-1/2 flex flex-col gap-1">
-            <div className="w-6 h-6 rounded-full bg-cyan-800 border-2 border-cyan-400" title="CTO" />
-            <div className="w-6 h-6 rounded-full bg-green-800 border-2 border-green-400" title="CFO" />
-          </div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-            <div className="w-6 h-6 rounded-full bg-slate-600 border-2 border-slate-400" title="COO" />
-            <div className="w-6 h-6 rounded-full bg-orange-800 border-2 border-orange-400" title="CMO" />
-          </div>
-          <div className="absolute top-1/2 left-6 -translate-y-1/2 flex flex-col gap-1">
-            <div className="w-6 h-6 rounded-full bg-purple-800 border-2 border-purple-400" title="CPO" />
-            <div className="w-6 h-6 rounded-full bg-pink-800 border-2 border-pink-400" title="CHRO" />
-          </div>
-          {/* Whiteboard */}
-          <div className="absolute -right-2 top-2 w-16 h-12 bg-slate-800 border border-slate-600 rounded text-[8px] text-slate-400 flex items-center justify-center">
-            Whiteboard
-          </div>
-          {/* Coffee corner */}
-          <div className="absolute -left-2 bottom-2 text-sm">☕</div>
-        </div>
-      </div>
-
-      {/* Features */}
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full z-10 px-4">
-        {[
-          { icon: '🎯', title: 'מומחים מובילים', desc: 'מועצה של 3-5 מומחים עם 30+ שנות ניסיון' },
-          { icon: '⚔️', title: 'ספקנות מקצועית', desc: 'חולקים, מאתגרים, מקשים — לא מרצים' },
-          { icon: '🚀', title: 'מרעיון לביצוע', desc: 'תוכנית פעולה, צוות, תקציב — הכל' },
-        ].map((f) => (
-          <div key={f.title} className="text-center p-6">
-            <div className="text-3xl mb-3">{f.icon}</div>
-            <div className="text-gray-900 dark:text-white font-semibold mb-1">{f.title}</div>
-            <div className="text-gray-500 text-sm">{f.desc}</div>
-          </div>
-        ))}
       </div>
 
       {/* Past Discussions */}
       {history.length > 0 && (
-        <div className="mt-16 w-full max-w-3xl z-10 px-4">
-          <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-4 text-center">דיונים קודמים</h3>
-          <div className="space-y-2">
-            {history.slice(0, 5).map((record) => (
-              <button
-                key={record.id}
-                onClick={() => navigate(`/office/${record.id}`)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-100 dark:bg-slate-800/50 hover:bg-gray-200 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-700/30 transition-colors text-right"
-              >
-                <span className="text-2xl">{record.domainIcon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{record.idea}</div>
-                  <div className="text-xs text-gray-500">{record.domain} · {record.membersCount} מומחים · {record.date}</div>
+        <div className="pb-12 px-4">
+          <div className="max-w-xl mx-auto">
+            <h3 className="text-gray-400 dark:text-gray-500 font-medium text-xs uppercase tracking-wider mb-3 text-center">דיונים אחרונים</h3>
+            <div className="space-y-1.5">
+              {history.slice(0, 3).map((record) => (
+                <button
+                  key={record.id}
+                  onClick={() => navigate(`/office/${record.id}`)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900/50 hover:bg-gray-100 dark:hover:bg-slate-800/50 border border-gray-200 dark:border-slate-800 transition-colors text-right"
+                >
+                  <span className="text-lg">{record.domainIcon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-800 dark:text-gray-200 truncate">{record.idea}</div>
+                    <div className="text-[10px] text-gray-400">{record.domain} · {record.date}</div>
+                  </div>
+                  <svg className="w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* How it works modal */}
+      {showHow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowHow(false)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={() => setShowHow(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 dark:hover:text-white">✕</button>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5 text-center">איך זה עובד?</h2>
+            <div className="space-y-4">
+              {[
+                { step: '1', icon: '📝', title: 'תאר את הרעיון', desc: 'רעיון חדש, עסק קיים (עם לינק לאתר), או בעיה חופשית' },
+                { step: '2', icon: '🏢', title: 'בחר תחום ומצב', desc: 'הנהלה בכירה (CEO, CTO, CFO...) או מועצת חכמים (מומחים אמיתיים)' },
+                { step: '3', icon: '💬', title: '8 מומחים דנים', desc: '7 שלבי דיון: פתיחה, חקירה, מחקר, עימות, מומחה אורח, הסכמה, סיכום' },
+                { step: '4', icon: '🎯', title: 'אתה מנהל', desc: 'לחץ על דמות לשאול ישירות, הזרק מידע, אתגר עמדה, שנה מהירות' },
+                { step: '5', icon: '📋', title: 'סיכום + תוכנית', desc: 'Action items עם הפניה לסוכנים, תקציב, צוות, ציר זמן — הכל' },
+              ].map((s) => (
+                <div key={s.step} className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm flex-shrink-0">
+                    {s.step}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-1.5">
+                      <span>{s.icon}</span> {s.title}
+                    </div>
+                    <div className="text-gray-500 text-xs mt-0.5">{s.desc}</div>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-400">→</span>
-              </button>
-            ))}
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Button onClick={() => { setShowHow(false); navigate('/start'); }}>
+                בוא נתחיל
+              </Button>
+            </div>
           </div>
         </div>
       )}
