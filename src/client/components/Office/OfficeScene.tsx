@@ -14,28 +14,32 @@ import CouncilIntro from './CouncilIntro';
 import ActivityTimeline from './ActivityTimeline';
 import type { CouncilMember } from '../../../shared/types';
 
-// Spread wider so speech bubbles don't overlap other characters
+// 10 seat positions — enough for 8 members + 2 guests, no overlaps
 const SEAT_POSITIONS = [
-  { x: 42, y: 14 },   // top center
-  { x: 64, y: 22 },   // top right
-  { x: 70, y: 46 },   // right
-  { x: 64, y: 70 },   // bottom right
-  { x: 42, y: 78 },   // bottom center
-  { x: 20, y: 70 },   // bottom left
-  { x: 14, y: 46 },   // left
-  { x: 20, y: 22 },   // top left
+  { x: 42, y: 12 },   // 0: top center
+  { x: 62, y: 18 },   // 1: top right
+  { x: 72, y: 40 },   // 2: right upper
+  { x: 68, y: 62 },   // 3: right lower
+  { x: 50, y: 78 },   // 4: bottom right
+  { x: 34, y: 78 },   // 5: bottom left
+  { x: 16, y: 62 },   // 6: left lower
+  { x: 12, y: 40 },   // 7: left upper
+  { x: 22, y: 18 },   // 8: top left (guest 1)
+  { x: 42, y: 50 },   // 9: center (guest 2 — near table)
 ];
 
-// Bubble offsets per seat — position bubble away from center to avoid overlap
+// Bubble offsets per seat
 const BUBBLE_OFFSETS: { dx: number; dy: number }[] = [
-  { dx: 0, dy: -20 },   // top center → bubble above
-  { dx: 15, dy: -15 },  // top right → bubble to upper-right
-  { dx: 18, dy: 0 },    // right → bubble to right
-  { dx: 10, dy: 8 },    // bottom right → bubble below-right
-  { dx: 0, dy: 8 },     // bottom → bubble below
-  { dx: -15, dy: 8 },   // bottom left → bubble below-left
-  { dx: -18, dy: 0 },   // left → bubble to left
-  { dx: -15, dy: -15 }, // top left → bubble to upper-left
+  { dx: 0, dy: -20 },   // 0 top → above
+  { dx: 14, dy: -14 },  // 1 top-right → upper-right
+  { dx: 16, dy: 0 },    // 2 right → right
+  { dx: 14, dy: 8 },    // 3 right-lower → lower-right
+  { dx: 8, dy: 8 },     // 4 bottom-right → below
+  { dx: -8, dy: 8 },    // 5 bottom-left → below
+  { dx: -16, dy: 8 },   // 6 left-lower → lower-left
+  { dx: -16, dy: 0 },   // 7 left → left
+  { dx: -14, dy: -14 }, // 8 top-left → upper-left
+  { dx: 0, dy: -20 },   // 9 center → above
 ];
 
 export default function OfficeScene() {
