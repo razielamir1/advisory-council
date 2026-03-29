@@ -3,6 +3,7 @@ import { Router, type Request, type Response } from 'express';
 import type { DiscussionState, UserInteraction, SSEEvent, CouncilMode } from '../../shared/types.js';
 import { apiKeyMiddleware } from '../middleware/api-key.js';
 import { runDiscussion } from '../services/discussion-engine.js';
+import { readWebsite } from '../services/website-reader.js';
 import { DOMAINS } from '../config/domains.js';
 
 const router = Router();
@@ -25,6 +26,31 @@ function scheduleCleanup(id: string): void {
     sseClients.delete(id);
   }, SESSION_TTL_MS);
 }
+
+// POST /api/discussion/analyze-website
+router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { url } = req.body;
+
+  if (!url || typeof url !== 'string') {
+    res.status(400).json({ error: 'URL is required.' });
+    return;
+  }
+
+  // Basic URL validation
+  try {
+    new URL(url);
+  } catch {
+    res.status(400).json({ error: 'Invalid URL format.' });
+    return;
+  }
+
+  try {
+    const summary = await readWebsite(url, (req as any).apiKey);
+    res.json({ summary, url });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to analyze website.' });
+  }
+});
 
 // POST /api/discussion/start
 router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {

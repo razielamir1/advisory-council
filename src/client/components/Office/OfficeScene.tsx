@@ -123,6 +123,7 @@ export default function OfficeScene() {
                   position={pos}
                   isSpeaking={isSpeaking}
                   activity={charState?.activity || (isSpeaking ? 'speaking' : 'sitting')}
+                  seatIndex={i}
                 />
                 {isSpeaking && activeMessage && (
                   <SpeechBubble

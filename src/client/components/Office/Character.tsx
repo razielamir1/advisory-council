@@ -6,6 +6,7 @@ interface CharacterProps {
   position: { x: number; y: number };
   isSpeaking: boolean;
   activity: string;
+  seatIndex?: number;
 }
 
 const ACCESSORIES: Record<string, string> = {
@@ -14,7 +15,7 @@ const ACCESSORIES: Record<string, string> = {
   headset: 'M-4,-2 Q-5,-4 -3,-5 M3,-5 Q5,-4 4,-2',
 };
 
-export default memo(function Character({ member, position, isSpeaking, activity }: CharacterProps) {
+export default memo(function Character({ member, position, isSpeaking, activity, seatIndex = 0 }: CharacterProps) {
   const animClass = isSpeaking
     ? 'animate-speaking'
     : activity === 'thinking'
@@ -30,6 +31,7 @@ export default memo(function Character({ member, position, isSpeaking, activity 
         left: `${position.x}%`,
         top: `${position.y}%`,
         transform: 'translate(-50%, -50%)',
+        animation: `seatIn 0.6s ease-out ${seatIndex * 0.15}s both`,
       }}
     >
       {/* Glow when speaking */}
