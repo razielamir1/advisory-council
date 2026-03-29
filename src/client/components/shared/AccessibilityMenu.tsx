@@ -76,10 +76,10 @@ export default function AccessibilityMenu() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-20 left-6 z-50 w-72 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-200 rounded-2xl shadow-2xl p-5 animate-slide-in">
+        <div className="fixed bottom-20 left-6 z-50 w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-5 animate-slide-in">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white dark:text-white text-gray-900 font-bold text-sm">תפריט נגישות</h3>
-            <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-white text-sm">✕</button>
+            <h3 className="text-gray-900 dark:text-white font-bold text-sm">תפריט נגישות</h3>
+            <button onClick={() => setOpen(false)} className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-sm">✕</button>
           </div>
 
           {/* Font size */}
@@ -88,19 +88,19 @@ export default function AccessibilityMenu() {
             <div className="flex gap-2">
               <button
                 onClick={() => update('fontSize', Math.max(80, settings.fontSize - 10))}
-                className="flex-1 py-1.5 rounded-lg bg-gray-800 dark:bg-gray-800 bg-gray-100 text-gray-300 dark:text-gray-300 text-gray-700 hover:bg-gray-700 text-sm font-bold"
+                className="flex-1 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold transition-colors"
               >
                 A-
               </button>
               <button
                 onClick={() => update('fontSize', 100)}
-                className="flex-1 py-1.5 rounded-lg bg-gray-800 dark:bg-gray-800 bg-gray-100 text-gray-300 dark:text-gray-300 text-gray-700 hover:bg-gray-700 text-xs"
+                className="flex-1 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => update('fontSize', Math.min(150, settings.fontSize + 10))}
-                className="flex-1 py-1.5 rounded-lg bg-gray-800 dark:bg-gray-800 bg-gray-100 text-gray-300 dark:text-gray-300 text-gray-700 hover:bg-gray-700 text-sm font-bold"
+                className="flex-1 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold transition-colors"
               >
                 A+
               </button>
@@ -115,8 +115,8 @@ export default function AccessibilityMenu() {
                 onClick={() => update(key, !settings[key])}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-right ${
                   settings[key]
-                    ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
-                    : 'bg-gray-800 dark:bg-gray-800 bg-gray-100 text-gray-400 dark:text-gray-400 text-gray-600 hover:bg-gray-700 dark:hover:bg-gray-700 hover:bg-gray-200'
+                    ? 'bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 <span className="text-base w-6 text-center">{icon}</span>
@@ -129,7 +129,7 @@ export default function AccessibilityMenu() {
           {/* Reset */}
           <button
             onClick={reset}
-            className="w-full mt-4 py-2 rounded-lg bg-gray-800 dark:bg-gray-800 bg-gray-100 text-gray-400 dark:text-gray-400 text-gray-600 hover:text-white text-xs transition-colors"
+            className="w-full mt-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-xs transition-colors"
           >
             איפוס הגדרות נגישות
           </button>

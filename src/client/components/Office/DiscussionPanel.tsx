@@ -69,7 +69,6 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
 
               {group.msgs.map((msg, mi) => {
                 const member = getMember(msg.memberId);
-                if (!member) return null;
 
                 const isModerator = msg.type === 'moderator';
                 const isSideChat = msg.type === 'side-chat';
@@ -86,6 +85,11 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
                   );
                 }
 
+                // Fallback values when member is not yet in the members array
+                const memberColor = member?.color ?? '#6366f1';
+                const memberRole = member?.role ?? msg.memberId ?? '?';
+                const memberName = member?.name ?? msg.memberId ?? 'Unknown';
+
                 return (
                   <div key={msg.id} className={`mb-4 animate-slide-in ${isSideChat ? 'opacity-50 mr-6' : ''}`}>
                     <div className={`rounded-2xl p-4 ${
@@ -96,19 +100,19 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
                       {/* Member header */}
                       <div className="flex items-center gap-2.5 mb-2">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm"
-                          style={{ background: member.color }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm flex-shrink-0"
+                          style={{ background: memberColor }}
                         >
-                          {member.role.substring(0, 2)}
+                          {memberRole.substring(0, 2)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-white">{member.name}</span>
+                            <span className="text-sm font-semibold text-white">{memberName}</span>
                             <span
                               className="text-[10px] px-1.5 py-0.5 rounded font-medium"
-                              style={{ color: member.color, background: member.color + '20' }}
+                              style={{ color: memberColor, background: memberColor + '20' }}
                             >
-                              {member.role}
+                              {memberRole}
                             </span>
                           </div>
                         </div>

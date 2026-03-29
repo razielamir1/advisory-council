@@ -41,7 +41,7 @@ export default function Landing() {
 
       {/* Hero */}
       <div className="text-center max-w-3xl z-10">
-        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-400 text-sm mb-8">
+        <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-600 dark:text-indigo-400 text-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           AI-Powered Advisory Council
         </div>
@@ -55,7 +55,7 @@ export default function Landing() {
           Your Virtual Board of Directors
         </p>
 
-        <p className="text-gray-500 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-500 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
           הציגו רעיון, בחרו תחום — ומועצה של מומחים בכירים תדון, תאתגר, תחקור ותייעץ.
           <br />
           דיון אמיתי. ספקנות מקצועית. לא ריצוי.
@@ -71,12 +71,12 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Mini office illustration */}
+      {/* Mini office illustration — always dark boardroom */}
       <div className="mt-20 w-full max-w-2xl z-10">
-        <div className="relative bg-gray-100 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 backdrop-blur">
+        <div className="relative bg-slate-900 border border-slate-700 rounded-2xl p-8">
           {/* Table */}
-          <div className="mx-auto w-48 h-24 bg-amber-900/30 rounded-[50%] border border-amber-800/30 flex items-center justify-center">
-            <span className="text-gray-600 text-xs">שולחן ישיבות</span>
+          <div className="mx-auto w-48 h-24 bg-amber-900/40 rounded-[50%] border border-amber-700/50 flex items-center justify-center">
+            <span className="text-slate-400 text-xs">שולחן ישיבות</span>
           </div>
           {/* Mini characters around table */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1">
@@ -87,15 +87,15 @@ export default function Landing() {
             <div className="w-6 h-6 rounded-full bg-green-800 border-2 border-green-400" title="CFO" />
           </div>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-            <div className="w-6 h-6 rounded-full bg-gray-700 border-2 border-gray-400" title="COO" />
+            <div className="w-6 h-6 rounded-full bg-slate-600 border-2 border-slate-400" title="COO" />
             <div className="w-6 h-6 rounded-full bg-orange-800 border-2 border-orange-400" title="CMO" />
           </div>
           <div className="absolute top-1/2 left-6 -translate-y-1/2 flex flex-col gap-1">
             <div className="w-6 h-6 rounded-full bg-purple-800 border-2 border-purple-400" title="CPO" />
             <div className="w-6 h-6 rounded-full bg-pink-800 border-2 border-pink-400" title="CHRO" />
           </div>
-          {/* Whiteboard on the right */}
-          <div className="absolute -right-2 top-2 w-16 h-12 bg-white/5 border border-gray-700 rounded text-[8px] text-gray-600 flex items-center justify-center">
+          {/* Whiteboard */}
+          <div className="absolute -right-2 top-2 w-16 h-12 bg-slate-800 border border-slate-600 rounded text-[8px] text-slate-400 flex items-center justify-center">
             Whiteboard
           </div>
           {/* Coffee corner */}

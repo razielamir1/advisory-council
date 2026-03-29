@@ -137,11 +137,11 @@ export default function DomainSelector() {
     : websiteSummary.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-950 dark:bg-gray-950 bg-gray-50 text-white dark:text-white text-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button onClick={() => navigate('/')} className="text-gray-500 hover:text-white dark:hover:text-white hover:text-gray-900 inline-flex items-center gap-2 transition-colors">
+          <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-900 dark:hover:text-white inline-flex items-center gap-2 transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             חזרה
           </button>
@@ -149,13 +149,13 @@ export default function DomainSelector() {
         </div>
 
         {/* Input Mode Toggle */}
-        <div className="flex gap-2 mb-8 bg-gray-900 dark:bg-gray-900 bg-gray-200 rounded-xl p-1">
+        <div className="flex gap-2 mb-8 bg-gray-200 dark:bg-gray-900 rounded-xl p-1">
           <button
             onClick={() => setInputMode('new-idea')}
             className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
               inputMode === 'new-idea'
                 ? 'bg-indigo-600 text-white'
-                : 'text-gray-400 dark:text-gray-400 text-gray-600 hover:text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             רעיון חדש
@@ -165,7 +165,7 @@ export default function DomainSelector() {
             className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
               inputMode === 'existing-business'
                 ? 'bg-indigo-600 text-white'
-                : 'text-gray-400 dark:text-gray-400 text-gray-600 hover:text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             עסק קיים
@@ -186,7 +186,7 @@ export default function DomainSelector() {
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="google.com"
                 dir="ltr"
-                className="flex-1 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-300 rounded-xl px-4 py-3 text-white dark:text-white text-gray-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
               />
               <Button
                 onClick={handleAnalyzeWebsite}
@@ -212,7 +212,7 @@ export default function DomainSelector() {
                   <span className="text-green-400 font-medium text-sm">האתר נקרא בהצלחה</span>
                   <span className="text-xs text-gray-600 dir-ltr" dir="ltr">{websiteUrl}</span>
                 </div>
-                <div className="text-sm text-gray-300 dark:text-gray-300 text-gray-700 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
                   {websiteSummary}
                 </div>
               </div>
@@ -228,7 +228,7 @@ export default function DomainSelector() {
                   onChange={(e) => setAdditionalNotes(e.target.value)}
                   rows={3}
                   placeholder="למשל: אנחנו רוצים להיכנס לשוק האמריקאי, מה הסיכונים?"
-                  className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-300 rounded-xl px-4 py-3 text-white dark:text-white text-gray-900 placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-4"
+                  className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-4"
                 />
               </div>
             )}
@@ -249,7 +249,7 @@ export default function DomainSelector() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="חפש תחום..."
-          className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-300 rounded-xl px-4 py-3 text-white dark:text-white text-gray-900 placeholder-gray-500 mb-6 focus:outline-none focus:border-indigo-500 transition-colors"
+          className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 mb-6 focus:outline-none focus:border-indigo-500 transition-colors"
         />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-10">
@@ -274,7 +274,7 @@ export default function DomainSelector() {
               onChange={(e) => setIdea(e.target.value)}
               rows={4}
               placeholder={selectedDomain.exampleTopics[0] || 'תאר את הרעיון שלך...'}
-              className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-gray-300 rounded-xl px-4 py-3 text-white dark:text-white text-gray-900 placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-4"
+              className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-4"
             />
 
             <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
@@ -287,7 +287,7 @@ export default function DomainSelector() {
                 <button
                   key={t}
                   onClick={() => setIdea(t)}
-                  className="text-xs bg-gray-800 dark:bg-gray-800 bg-gray-200 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg px-3 py-1.5 transition-colors"
+                  className="text-xs bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg px-3 py-1.5 transition-colors"
                 >
                   {t}
                 </button>
@@ -313,14 +313,14 @@ export default function DomainSelector() {
                     className={`flex-1 p-5 rounded-xl border text-right transition-all ${
                       isSelected
                         ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
-                        : 'border-gray-600 bg-gray-800 hover:border-gray-500 hover:bg-gray-750'
+                        : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-750'
                     }`}
                   >
                     <div className="text-xl mb-2">{opt.icon}</div>
-                    <div className={`font-semibold mb-1 ${isSelected ? 'text-indigo-300' : 'text-gray-200'}`}>
+                    <div className={`font-semibold mb-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-800 dark:text-gray-200'}`}>
                       {opt.title}
                     </div>
-                    <div className="text-gray-400 text-sm">{opt.desc}</div>
+                    <div className="text-gray-500 dark:text-gray-400 text-sm">{opt.desc}</div>
                   </button>
                 );
               })}
@@ -328,7 +328,7 @@ export default function DomainSelector() {
 
             {/* Language Selector */}
             <div className="mb-8">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">שפת הדיון</h3>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">שפת הדיון</h3>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGES.map((lang) => (
                   <button
@@ -337,7 +337,7 @@ export default function DomainSelector() {
                     className={`px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
                       language === lang.id
                         ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                        : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
                     <span>{lang.flag}</span>

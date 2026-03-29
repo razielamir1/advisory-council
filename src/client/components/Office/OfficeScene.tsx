@@ -173,24 +173,31 @@ export default function OfficeScene() {
                     </>
                   ) : (
                     <>
+                      {/* Spinner */}
                       <div className="flex justify-center mb-6">
-                        <div className="flex gap-3">
-                          {[0, 1, 2, 3, 4].map((i) => (
-                            <div
-                              key={i}
-                              className="w-10 h-10 rounded-full bg-slate-700/50 border-2 border-slate-600 animate-pulse"
-                              style={{ animationDelay: `${i * 0.2}s` }}
-                            />
-                          ))}
-                        </div>
+                        <svg
+                          className="w-14 h-14 text-indigo-500 animate-spin"
+                          viewBox="0 0 50 50"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <circle
+                            className="opacity-20"
+                            cx="25"
+                            cy="25"
+                            r="20"
+                            stroke="currentColor"
+                            strokeWidth="5"
+                          />
+                          <path
+                            className="opacity-90"
+                            fill="currentColor"
+                            d="M25 5a20 20 0 0 1 14.14 5.86l-3.54 3.54A15 15 0 0 0 25 10V5z"
+                          />
+                        </svg>
                       </div>
                       <div className="text-slate-300 text-lg mb-2">מכינים את חדר הישיבות...</div>
                       <div className="text-slate-500 text-sm">המומחים בדרך</div>
-                      <div className="mt-4 flex justify-center">
-                        <div className="w-32 h-1 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-indigo-500 rounded-full animate-pulse w-1/2" />
-                        </div>
-                      </div>
                     </>
                   )}
                 </div>
