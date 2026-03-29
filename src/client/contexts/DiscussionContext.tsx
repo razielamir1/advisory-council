@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, type ReactNode, type Dispatch } from 'react';
+import { createContext, useContext, useReducer, useMemo, type ReactNode, type Dispatch } from 'react';
 import type {
   CouncilMode,
   CouncilMember,
@@ -79,13 +79,23 @@ function reducer(state: ClientDiscussionState, action: DiscussionAction): Client
       };
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.payload] };
-    case 'APPEND_TOKEN':
+    case 'APPEND_TOKEN': {
+      // O(1) fast path: the streamed message is always the last one
+      const msgs = state.messages;
+      const last = msgs[msgs.length - 1];
+      if (last && last.id === action.payload.messageId) {
+        const updated = [...msgs];
+        updated[updated.length - 1] = { ...last, content: last.content + action.payload.token };
+        return { ...state, messages: updated };
+      }
+      // Fallback O(n)
       return {
         ...state,
-        messages: state.messages.map((m) =>
+        messages: msgs.map((m) =>
           m.id === action.payload.messageId ? { ...m, content: m.content + action.payload.token } : m
         ),
       };
+    }
     case 'COMPLETE_MESSAGE':
       return {
         ...state,
@@ -140,8 +150,11 @@ const DiscussionContext = createContext<DiscussionContextType>({
 export function DiscussionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // Memoize to avoid re-creating the context value on every render
+  const value = useMemo(() => ({ state, dispatch }), [state]);
+
   return (
-    <DiscussionContext.Provider value={{ state, dispatch }}>
+    <DiscussionContext.Provider value={value}>
       {children}
     </DiscussionContext.Provider>
   );

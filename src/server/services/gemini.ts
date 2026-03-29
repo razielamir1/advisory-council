@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export class ClaudeService {
+export class GeminiService {
   private genAI: GoogleGenerativeAI;
 
   constructor(apiKey?: string) {

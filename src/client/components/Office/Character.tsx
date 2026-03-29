@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { CouncilMember } from '../../../shared/types';
 
 interface CharacterProps {
@@ -13,7 +14,7 @@ const ACCESSORIES: Record<string, string> = {
   headset: 'M-4,-2 Q-5,-4 -3,-5 M3,-5 Q5,-4 4,-2',
 };
 
-export default function Character({ member, position, isSpeaking, activity }: CharacterProps) {
+export default memo(function Character({ member, position, isSpeaking, activity }: CharacterProps) {
   const animClass = isSpeaking
     ? 'animate-speaking'
     : activity === 'thinking'
@@ -90,7 +91,7 @@ export default function Character({ member, position, isSpeaking, activity }: Ch
       </div>
     </div>
   );
-}
+});
 
 function lighten(hex: string, percent: number): string {
   const num = parseInt(hex.replace('#', ''), 16);

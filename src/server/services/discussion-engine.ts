@@ -7,7 +7,7 @@ import type {
   DiscussionMessage,
   CharacterState,
 } from '../../shared/types.js';
-import { ClaudeService } from './claude.js';
+import { GeminiService } from './gemini.js';
 import { buildCouncil, buildGuestExpert } from './council-builder.js';
 
 function generateId(): string {
@@ -23,7 +23,7 @@ export async function runDiscussion(
   res: Response,
   apiKey: string
 ): Promise<void> {
-  const claude = new ClaudeService(apiKey);
+  const claude = new GeminiService(apiKey);
 
   // Build council
   const members = buildCouncil(discussion.domain, discussion.idea, discussion.mode);
@@ -190,7 +190,7 @@ interface PhaseOptions {
 }
 
 async function runPhase(
-  claude: ClaudeService,
+  claude: GeminiService,
   res: Response,
   discussion: DiscussionState,
   allMessages: DiscussionMessage[],
@@ -300,7 +300,7 @@ function buildUserMessage(idea: string, domainName: string, priorContext: string
 }
 
 async function generateSummary(
-  claude: ClaudeService,
+  claude: GeminiService,
   discussion: DiscussionState,
   allMessages: DiscussionMessage[]
 ): Promise<any> {

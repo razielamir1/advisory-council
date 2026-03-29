@@ -16,7 +16,7 @@ export default function DiscussionPanel({ messages, members, currentPhase, statu
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages.length]);
 
   const getMember = (id: string) => members.find((m) => m.id === id);
   const phaseInfo = DISCUSSION_PHASES.find((p) => p.id === currentPhase);

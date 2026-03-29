@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { DISCUSSION_PHASES, type DiscussionPhase } from '../../../shared/types';
 
 interface ProgressBarProps {
   currentPhase: DiscussionPhase;
 }
 
-export default function ProgressBar({ currentPhase }: ProgressBarProps) {
+export default memo(function ProgressBar({ currentPhase }: ProgressBarProps) {
   const currentIndex = DISCUSSION_PHASES.findIndex((p) => p.id === currentPhase);
 
   return (
@@ -41,4 +42,4 @@ export default function ProgressBar({ currentPhase }: ProgressBarProps) {
       </div>
     </div>
   );
-}
+});
