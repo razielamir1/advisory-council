@@ -199,4 +199,13 @@ export const DOMAINS: Domain[] = [
     color: '#475569',
     exampleTopics: ['Boutique strategy firm', 'Digital transformation consultancy', 'Fractional C-suite service'],
   },
+  {
+    id: 'other',
+    name: 'Other',
+    nameHe: 'אחר',
+    icon: '🔮',
+    description: 'Any field not listed above — describe your domain',
+    color: '#a855f7',
+    exampleTopics: ['Describe your unique industry', 'Niche market venture', 'Cross-industry idea'],
+  },
 ];
