@@ -9,7 +9,7 @@ import DomainCard from './DomainCard';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 
-type InputMode = 'new-idea' | 'existing-business' | 'free-problem';
+type InputMode = 'new-idea' | 'existing-business' | 'free-problem' | 'open-chat';
 
 export default function DomainSelector() {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export default function DomainSelector() {
   const [language, setLanguage] = useState<DiscussionLanguage>(state.language);
   const [inputMode, setInputMode] = useState<InputMode>('new-idea');
   const [freeProblem, setFreeProblem] = useState('');
+  const [chatTopic, setChatTopic] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [websiteSummary, setWebsiteSummary] = useState('');
   const [analyzingWebsite, setAnalyzingWebsite] = useState(false);
@@ -90,9 +91,12 @@ export default function DomainSelector() {
     let fullIdea = '';
     let domainId = selectedDomain?.id;
 
-    if (inputMode === 'free-problem') {
+    if (inputMode === 'open-chat') {
+      fullIdea = `[שיחה חופשית עם המועצה]\n${chatTopic}`;
+      domainId = domainId || 'consulting';
+    } else if (inputMode === 'free-problem') {
       fullIdea = freeProblem;
-      domainId = domainId || 'consulting'; // fallback domain
+      domainId = domainId || 'consulting';
     } else if (inputMode === 'existing-business' && websiteSummary) {
       fullIdea = `[Existing Business Analysis]\nWebsite: ${websiteUrl}\n\n${websiteSummary}`;
       if (additionalNotes.trim()) {
@@ -154,6 +158,7 @@ export default function DomainSelector() {
   }
 
   const canStart =
+    inputMode === 'open-chat' ? chatTopic.trim().length >= 5 :
     inputMode === 'free-problem' ? freeProblem.trim().length >= 10 :
     inputMode === 'new-idea' ? (selectedDomain && idea.trim().length >= 10) :
     (selectedDomain && websiteSummary.length > 0);
@@ -202,7 +207,56 @@ export default function DomainSelector() {
           >
             בעיה / שאלה
           </button>
+          <button
+            onClick={() => setInputMode('open-chat')}
+            className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
+              inputMode === 'open-chat'
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+            }`}
+          >
+            שיחה חופשית
+          </button>
         </div>
+
+        {/* Open Chat Mode */}
+        {inputMode === 'open-chat' && (
+          <div className="mb-10 animate-fade-in">
+            <h1 className="text-3xl font-bold mb-2">שיחה חופשית עם המועצה</h1>
+            <p className="text-gray-500 mb-6">על מה תרצה לדבר? כתוב בחופשיות — בלי מבנה, בלי תחום, בלי מסגרת.</p>
+
+            <textarea
+              value={chatTopic}
+              onChange={(e) => setChatTopic(e.target.value)}
+              rows={4}
+              autoFocus
+              placeholder={"למשל:\n• מה דעתכם על לעבור מתפקיד שכיר לעצמאי?\n• אני חושב על רעיון אבל לא בטוח אם הוא שווה משהו\n• צריך חוות דעת על מצב השוק\n• סתם רוצה brainstorm על הכיוון של החיים שלי"}
+              className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors mb-4 text-[15px] leading-relaxed"
+            />
+
+            <div className="text-sm text-gray-400 mb-6">
+              המועצה תקרא, תבין, ותגיב — כל אחד מהזווית שלו. אתה יכול לשאול follow-up, לאתגר, ולנהל את השיחה כרצונך.
+            </div>
+
+            {/* Quick starters */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                'חוות דעת על כיוון קריירה',
+                'brainstorm על רעיון גולמי',
+                'מה דעתכם על המצב הכלכלי',
+                'איך הייתם מתמודדים עם...',
+              ].map((ex) => (
+                <button
+                  key={ex}
+                  onClick={() => setChatTopic(ex)}
+                  className="text-xs bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Free Problem Mode */}
         {inputMode === 'free-problem' && (
@@ -318,7 +372,7 @@ export default function DomainSelector() {
         )}
 
         {/* Domain Selector — hidden in free-problem mode */}
-        {inputMode !== 'free-problem' && <input
+        {inputMode !== 'free-problem' && inputMode !== 'open-chat' && <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -326,7 +380,7 @@ export default function DomainSelector() {
           className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 mb-6 focus:outline-none focus:border-indigo-500 transition-colors"
         />}
 
-        {inputMode !== 'free-problem' && (
+        {inputMode !== 'free-problem' && inputMode !== 'open-chat' && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-10">
             {filtered.map((d) => (
               <DomainCard
@@ -374,6 +428,7 @@ export default function DomainSelector() {
 
         {/* Mode + Start (shared) */}
         {(
+          inputMode === 'open-chat' ? chatTopic.trim().length >= 5 :
           inputMode === 'free-problem' ? freeProblem.trim().length >= 10 :
           inputMode === 'new-idea' ? (selectedDomain && idea.trim().length > 0) :
           (selectedDomain && websiteSummary)
