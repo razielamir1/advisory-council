@@ -13,6 +13,7 @@ You present an idea. A boardroom of 8 AI-powered executives sits around the tabl
 | **New Idea** | Describe a new venture, product, or concept |
 | **Existing Business** | Paste a website URL — AI reads and analyzes it, then the council discusses |
 | **Free Problem** | Any challenge — career decisions, organizational issues, negotiations |
+| **Open Chat** | Free conversation — brainstorm with the full table or 1-on-1 with a specific member |
 
 ### The Council (8 Members)
 
@@ -45,6 +46,17 @@ You present an idea. A boardroom of 8 AI-powered executives sits around the tabl
 - **Control reading speed** — fast / normal / slow typing
 - **Hover on a speech bubble** — discussion pauses so you can read
 - **Choose language** — Hebrew, English, Arabic, Russian, French, Spanish
+- **Discussion history** — browse and revisit past council sessions
+- **Cost tracking** — real-time token/cost counter per discussion
+
+### Smart Council Assembly
+
+- **C-Suite mode** — CEO, CTO, CFO, CPO, CMO, COO, CDO, CAIO with names and backstories
+- **Expert mode** — Real-world figures analyzed by AI (e.g., NBA commissioner for sports-tech)
+- **CEO has relevant experience** — always a veteran of a similar company to your idea
+- **AI Expert at the table** — suggests no-code/AI tools like Base44, Bolt, v0, Lovable
+- **22+ industry domains** — plus "Other" for anything unlisted
+- **Auto-detected domain** — in free problem mode, AI picks the right council
 
 ### From Discussion to Execution
 
