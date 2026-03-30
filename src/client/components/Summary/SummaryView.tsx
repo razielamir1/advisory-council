@@ -105,6 +105,7 @@ export default function SummaryView() {
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={handleCopyMarkdown}>Copy MD</Button>
+            <Button variant="ghost" size="sm" onClick={() => window.print()}>PDF</Button>
             <Button size="sm" onClick={() => navigate(`/plan/${id}`)}>בנה תוכנית ביצוע</Button>
           </div>
         </div>
