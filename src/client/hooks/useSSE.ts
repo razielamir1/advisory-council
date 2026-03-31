@@ -135,6 +135,9 @@ export function useSSE(
           case 'side-chat':
             dispatch({ type: 'ADD_MESSAGE', payload: { ...data, type: 'side-chat' } });
             break;
+          case 'chairman-input-needed':
+            dispatch({ type: 'CHAIRMAN_INPUT_NEEDED', payload: data as any });
+            break;
           case 'discussion-complete':
             dispatch({ type: 'SET_SUMMARY', payload: data.summary });
             break;

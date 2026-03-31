@@ -22,6 +22,7 @@ export default function DomainSelector() {
   const [mode, setMode] = useState<CouncilMode>(state.mode);
   const [language, setLanguage] = useState<DiscussionLanguage>(state.language);
   const [inputMode, setInputMode] = useState<InputMode>('new-idea');
+  const [userName, setUserName] = useState(localStorage.getItem('userName') || '');
   const [freeProblem, setFreeProblem] = useState('');
   const [chatTopic, setChatTopic] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -117,7 +118,7 @@ export default function DomainSelector() {
       const res = await fetch('/api/discussion/start', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ domain: { id: domainId }, idea: fullIdea, mode, language }),
+        body: JSON.stringify({ domain: { id: domainId }, idea: fullIdea, mode, language, userName: userName.trim() || undefined }),
       });
 
       if (!res.ok) {
@@ -459,6 +460,18 @@ export default function DomainSelector() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* User Name */}
+            <div className="mb-8">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">איך קוראים לך? <span className="text-gray-400 font-normal">(רשות)</span></h3>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => { setUserName(e.target.value); localStorage.setItem('userName', e.target.value); }}
+                placeholder="השם שלך — כדי שחברי המועצה יפנו אליך אישית"
+                className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
 
             {/* Language Selector */}

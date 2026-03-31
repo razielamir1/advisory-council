@@ -48,6 +48,7 @@ export default function OfficeScene() {
   const { state, dispatch } = useDiscussionContext();
   const [selectedMember, setSelectedMember] = useState<CouncilMember | null>(null);
   const [showKeyPoints, setShowKeyPoints] = useState(false);
+  const [chairmanReply, setChairmanReply] = useState('');
   const [readingSpeed, setReadingSpeed] = useState<'fast' | 'normal' | 'slow'>('fast');
   const [hoveredBubble, setHoveredBubble] = useState<string | null>(null); // member ID
   const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
@@ -329,6 +330,71 @@ export default function OfficeScene() {
           onClose={() => setSelectedMember(null)}
           onSend={handleDirectSend}
         />
+      )}
+
+      {/* Chairman Input Prompt */}
+      {state.chairmanInputNeeded && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
+          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/50 rounded-2xl w-full max-w-lg shadow-2xl shadow-amber-500/10 animate-bubble-in">
+            <div className="p-5 border-b border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-lg">👑</div>
+                <div>
+                  <h3 className="text-white font-bold">תורך לדבר, יו&quot;ר!</h3>
+                  <p className="text-amber-400/80 text-sm">
+                    {state.chairmanInputNeeded.askingMemberName} ({state.chairmanInputNeeded.askingMemberRole}) פנה אליך
+                  </p>
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm mt-3 bg-slate-800/50 p-3 rounded-lg" dir="auto">
+                &ldquo;...{state.chairmanInputNeeded.snippet.slice(-150)}&rdquo;
+              </p>
+            </div>
+            <div className="p-5">
+              <textarea
+                value={chairmanReply}
+                onChange={(e) => setChairmanReply(e.target.value)}
+                placeholder="תגובתך כיו״ר המועצה..."
+                className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                rows={3}
+                dir="auto"
+                autoFocus
+              />
+              <div className="flex gap-3 mt-3">
+                <button
+                  onClick={() => {
+                    dispatch({ type: 'CHAIRMAN_INPUT_SENT' });
+                    setChairmanReply('');
+                  }}
+                  className="px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm"
+                >
+                  דלג — תמשיכו בלעדיי
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!chairmanReply.trim()) return;
+                    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                    const storedKey = localStorage.getItem('advisory-council-api-key');
+                    if (storedKey) headers['x-api-key'] = storedKey;
+                    await fetch(`/api/discussion/${id}/interact`, {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify({ type: 'question', content: chairmanReply.trim() }),
+                    });
+                    dispatch({ type: 'CHAIRMAN_INPUT_SENT' });
+                    setChairmanReply('');
+                  }}
+                  disabled={!chairmanReply.trim()}
+                  className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-xl transition-colors"
+                >
+                  שלח תגובה
+                </button>
+              </div>
+              <p className="text-slate-600 text-xs mt-2 text-center">הדיון ימשיך אוטומטית אחרי 60 שניות</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Key Points Panel */}

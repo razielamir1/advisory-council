@@ -10,6 +10,7 @@ const router = Router();
 const discussions = new Map<string, DiscussionState>();
 const discussionKeys = new Map<string, string>(); // discussionId -> apiKey
 const sseClients = new Map<string, Response>();
+const chairmanResolvers = new Map<string, (input: string) => void>();
 
 const VALID_MODES: CouncilMode[] = ['csuite', 'experts'];
 const MAX_IDEA_LENGTH = 2000;
@@ -59,7 +60,7 @@ router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Resp
 
 // POST /api/discussion/start
 router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const { idea, mode, language } = req.body;
+  const { idea, mode, language, userName } = req.body;
   const domainId = req.body.domain?.id;
 
   const domain = DOMAINS.find((d) => d.id === domainId);
@@ -95,6 +96,7 @@ router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
     activeSpeakerId: null,
     status: 'idle',
     summary: null,
+    userName: typeof userName === 'string' ? userName.trim().slice(0, 50) : undefined,
   };
 
   discussions.set(discussionId, discussion);
@@ -135,7 +137,26 @@ router.get('/:id/stream', (req: Request, res: Response): void => {
     sseClients.delete(id);
   });
 
-  runDiscussion(discussion, res, apiKey).catch((err) => {
+  const waitForChairman = (askingMemberId: string, _question: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      chairmanResolvers.set(id, resolve);
+      // Auto-continue after 60 seconds if no response
+      const timer = setTimeout(() => {
+        if (chairmanResolvers.has(id)) {
+          chairmanResolvers.delete(id);
+          resolve(null);
+        }
+      }, 60_000);
+      // Store timer cleanup
+      const originalResolve = chairmanResolvers.get(id)!;
+      chairmanResolvers.set(id, (input: string) => {
+        clearTimeout(timer);
+        originalResolve(input);
+      });
+    });
+  };
+
+  runDiscussion(discussion, res, apiKey, waitForChairman).catch((err) => {
     console.error('[Discussion Error]', err);
     sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
     res.end();
@@ -181,6 +202,14 @@ router.post('/:id/interact', apiKeyMiddleware, async (req: Request, res: Respons
 
   // Respond immediately to the HTTP request
   res.json({ received: true, messageId: userMessageId });
+
+  // If the discussion engine is waiting for chairman input, resolve it
+  const chairmanResolver = chairmanResolvers.get(id);
+  if (chairmanResolver) {
+    chairmanResolvers.delete(id);
+    chairmanResolver(interaction.content);
+    return; // The discussion engine will continue from where it paused
+  }
 
   // Now generate an AI response from the targeted member (or CEO if none specified)
   if (!apiKey || !client) return;

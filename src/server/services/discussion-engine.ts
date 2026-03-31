@@ -21,7 +21,8 @@ function sendSSE(res: Response, event: SSEEvent): void {
 export async function runDiscussion(
   discussion: DiscussionState,
   res: Response,
-  apiKey: string
+  apiKey: string,
+  waitForChairman?: (askingMemberId: string, question: string) => Promise<string | null>
 ): Promise<void> {
   const claude = new GeminiService(apiKey);
 
@@ -58,7 +59,7 @@ Give your INITIAL REACTION to this idea. Be thorough — 2-3 full paragraphs:
 IMPORTANT: Be SKEPTICAL by default. Don't say "great idea!" — challenge it. Ask hard questions.
 If it seems weak, say so directly. Protect the founder's money and time.`,
     speakersCount: Math.min(members.length, 4),
-  });
+  }, waitForChairman);
 
   // ===== PHASE 2: Deep Probing =====
   sendSSE(res, { type: 'phase-change', data: { phase: 'probing', phaseNumber: 1, totalPhases: 7 } });
@@ -73,7 +74,7 @@ If it seems weak, say so directly. Protect the founder's money and time.`,
 Be tough. Don't accept surface-level answers. Push for depth.`,
     speakersCount: 4,
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // ===== PHASE 3: Research & Evidence =====
   sendSSE(res, { type: 'phase-change', data: { phase: 'research', phaseNumber: 2, totalPhases: 7 } });
@@ -93,7 +94,7 @@ Be specific. Use numbers. Reference real companies and real outcomes.
 If you don't have exact numbers, give realistic estimates based on your experience.`,
     speakersCount: 3,
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // Move characters back
   sendSSE(res, { type: 'character-move', data: { memberId: members[1]?.id, location: 'boardroom', activity: 'sitting' } });
@@ -113,7 +114,7 @@ This is NOT a polite discussion. This is a real debate. Be respectful but TOUGH.
 Don't agree for the sake of agreeing. If you think something is wrong, say it.`,
     speakersCount: 4,
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // ===== PHASE 5: Guest Expert =====
   sendSSE(res, { type: 'phase-change', data: { phase: 'guest', phaseNumber: 4, totalPhases: 7 } });
@@ -140,7 +141,7 @@ You've heard everything discussed so far. Now give your specialized perspective:
 Be blunt. You were brought in for your expertise, not to be polite.`,
     speakersCount: 2,
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // ===== PHASE 6: Consensus Building =====
   sendSSE(res, { type: 'phase-change', data: { phase: 'consensus', phaseNumber: 5, totalPhases: 7 } });
@@ -156,7 +157,7 @@ This is NOT forced consensus. If there's real disagreement, state it clearly.
 The founder needs to know where the board is aligned and where it's split.`,
     speakersCount: 3,
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // ===== PHASE 7: Final Recommendations =====
   sendSSE(res, { type: 'phase-change', data: { phase: 'closing', phaseNumber: 6, totalPhases: 7 } });
@@ -170,7 +171,7 @@ The founder needs to know where the board is aligned and where it's split.`,
 Keep it to 3-4 sentences maximum. Be decisive. The founder needs clear direction.`,
     speakersCount: Math.min(members.length, 5),
     referencePrior: true,
-  });
+  }, waitForChairman);
 
   // ===== Generate Summary =====
   discussion.status = 'summarizing';
@@ -189,6 +190,24 @@ interface PhaseOptions {
   referencePrior?: boolean;
 }
 
+function detectChairmanAddress(content: string, userName?: string): boolean {
+  const lowerContent = content.toLowerCase();
+  const markers = [
+    'יו"ר', 'יו״ר', 'chairman', 'מר יושב ראש',
+    'מה אתה חושב?', 'מה דעתך?', 'what do you think?',
+    'אני שואל אותך', 'i\'d like to ask you',
+    'תגיד לנו', 'tell us', 'ספר לנו',
+    'אני פונה אליך', 'addressing you',
+    'מה התגובה שלך?', 'your response?',
+  ];
+  if (userName) {
+    markers.push(userName.toLowerCase());
+    markers.push(`${userName.toLowerCase()},`);
+    markers.push(`${userName.toLowerCase()}?`);
+  }
+  return markers.some(m => lowerContent.includes(m));
+}
+
 async function runPhase(
   claude: GeminiService,
   res: Response,
@@ -196,7 +215,8 @@ async function runPhase(
   allMessages: DiscussionMessage[],
   phase: DiscussionPhase,
   speakers: CouncilMember[],
-  options: PhaseOptions
+  options: PhaseOptions,
+  waitForChairman?: (askingMemberId: string, question: string) => Promise<string | null>
 ): Promise<void> {
   const selectedSpeakers = speakers.slice(0, options.speakersCount);
 
@@ -258,6 +278,42 @@ async function runPhase(
       data: { memberId: member.id, location: 'boardroom', activity: 'sitting' },
     });
 
+    // Check if speaker addressed the chairman/founder
+    if (waitForChairman && detectChairmanAddress(fullContent, discussion.userName)) {
+      sendSSE(res, {
+        type: 'chairman-input-needed',
+        data: {
+          askingMemberId: member.id,
+          askingMemberName: member.name,
+          askingMemberRole: member.role,
+          snippet: fullContent.slice(-200),
+        },
+      });
+
+      const chairmanResponse = await waitForChairman(member.id, fullContent);
+
+      if (chairmanResponse) {
+        // Add chairman's response as a message
+        const chairmanMsgId = generateId();
+        const chairmanMsg: DiscussionMessage = {
+          id: chairmanMsgId,
+          memberId: 'chairman',
+          phase,
+          content: chairmanResponse,
+          timestamp: Date.now(),
+          type: 'speech',
+        };
+        allMessages.push(chairmanMsg);
+
+        sendSSE(res, {
+          type: 'member-start',
+          data: { memberId: 'chairman', messageId: chairmanMsgId, phase, messageType: 'speech' },
+        });
+        sendSSE(res, { type: 'token', data: { messageId: chairmanMsgId, token: chairmanResponse } });
+        sendSSE(res, { type: 'member-end', data: { messageId: chairmanMsgId, fullContent: chairmanResponse } });
+      }
+    }
+
     // Brief pause between speakers
     await delay(800);
   }
@@ -301,11 +357,13 @@ RULES:
 - Speak in YOUR authentic voice — use your known communication style and mental models
 - Reference your real experience — but pick RELEVANT examples at a similar scale
 - Be SKEPTICAL by default — don't praise the idea, challenge it
+- The founder/user presenting this idea is named: ${discussion.userName || 'unknown'}.${discussion.userName ? ` Address them as "${discussion.userName}" — use their name naturally.` : ' If you want to address them, say "the founder" or equivalent in the discussion language.'}
 - Address other board members by name when responding to their points
 - Keep response to 1-2 focused paragraphs (not more!)
 - Use specific numbers and examples that match the scale of THIS idea
 - If you disagree with someone, say so directly and explain why
 - Think about what could go WRONG, not just what could go right
+- Occasionally (not every time) address the founder/chairman directly — ask their opinion, request information only they know, or invite them into the conversation
 - Do NOT exaggerate — stay grounded and practical`;
 }
 

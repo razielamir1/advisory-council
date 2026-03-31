@@ -94,6 +94,7 @@ export interface DiscussionState {
   activeSpeakerId: string | null;
   status: 'idle' | 'discussing' | 'interactive' | 'summarizing' | 'complete' | 'error';
   summary: DiscussionSummary | null;
+  userName?: string;
 }
 
 // ===== SSE =====
@@ -109,6 +110,7 @@ export type SSEEventType =
   | 'break-start'
   | 'break-end'
   | 'discussion-complete'
+  | 'chairman-input-needed'
   | 'error';
 
 export interface SSEEvent {
@@ -219,6 +221,7 @@ export interface StartDiscussionRequest {
   idea: string;
   mode: CouncilMode;
   language?: DiscussionLanguage;
+  userName?: string;
 }
 
 export interface UserInteraction {

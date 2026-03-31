@@ -25,6 +25,7 @@ export interface ClientDiscussionState {
   status: 'idle' | 'discussing' | 'interactive' | 'summarizing' | 'complete' | 'error';
   summary: DiscussionSummary | null;
   error: string | null;
+  chairmanInputNeeded: { askingMemberId: string; askingMemberName: string; askingMemberRole: string; snippet: string } | null;
 }
 
 const initialState: ClientDiscussionState = {
@@ -41,6 +42,7 @@ const initialState: ClientDiscussionState = {
   status: 'idle',
   summary: null,
   error: null,
+  chairmanInputNeeded: null,
 };
 
 // ===== Actions =====
@@ -60,6 +62,8 @@ export type DiscussionAction =
   | { type: 'SET_SUMMARY'; payload: DiscussionSummary }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_STATUS'; payload: ClientDiscussionState['status'] }
+  | { type: 'CHAIRMAN_INPUT_NEEDED'; payload: ClientDiscussionState['chairmanInputNeeded'] }
+  | { type: 'CHAIRMAN_INPUT_SENT' }
   | { type: 'RESET' };
 
 function reducer(state: ClientDiscussionState, action: DiscussionAction): ClientDiscussionState {
@@ -135,6 +139,10 @@ function reducer(state: ClientDiscussionState, action: DiscussionAction): Client
       return { ...state, error: action.payload, status: 'error' };
     case 'SET_STATUS':
       return { ...state, status: action.payload };
+    case 'CHAIRMAN_INPUT_NEEDED':
+      return { ...state, chairmanInputNeeded: action.payload };
+    case 'CHAIRMAN_INPUT_SENT':
+      return { ...state, chairmanInputNeeded: null };
     case 'RESET':
       return initialState;
     default:
