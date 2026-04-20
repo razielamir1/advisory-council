@@ -15,7 +15,7 @@ export class GeminiService {
     options: { model?: string; maxTokens?: number } = {}
   ): Promise<string> {
     const model = this.genAI.getGenerativeModel({
-      model: options.model || 'gemini-2.0-flash',
+      model: options.model || 'gemini-2.5-flash',
       systemInstruction: systemPrompt,
     });
 
@@ -29,7 +29,7 @@ export class GeminiService {
     options: { model?: string; maxTokens?: number } = {}
   ): AsyncGenerator<string> {
     const model = this.genAI.getGenerativeModel({
-      model: options.model || 'gemini-2.0-flash',
+      model: options.model || 'gemini-2.5-flash',
       systemInstruction: systemPrompt,
     });
 

@@ -435,7 +435,7 @@ Return ONLY valid JSON, no markdown code fences.`;
     const response = await claude.generateMessage(
       'You are an expert moderator. You MUST output ONLY raw JSON — no markdown, no code fences, no explanation. Just the JSON object.',
       prompt,
-      { model: 'gemini-2.0-flash', maxTokens: 8192 }
+      { model: 'gemini-2.5-flash', maxTokens: 8192 }
     );
 
     // Strip markdown code fences if present
