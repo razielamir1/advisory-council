@@ -2,36 +2,38 @@ import { GeminiService } from './gemini.js';
 
 export async function readWebsite(url: string, apiKey: string): Promise<string> {
   // Fetch the website HTML
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; AdvisoryCouncilBot/1.0)',
-      'Accept': 'text/html',
-    },
-    signal: AbortSignal.timeout(15000),
-  });
+  // Use r.jina.ai — a free reader service that handles cookies, JS rendering,
+  // redirects, and returns clean markdown. Works where raw fetch fails.
+  const readerUrl = `https://r.jina.ai/${url}`;
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch website: ${response.status}`);
+  let cleaned: string;
+  try {
+    const response = await fetch(readerUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AdvisoryCouncil/1.0)',
+        'Accept': 'text/plain',
+      },
+      signal: AbortSignal.timeout(25000),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      if (body.includes('TOO_MANY_REDIRECTS') || response.status === 422) {
+        throw new Error('האתר הזה חוסם קריאה אוטומטית (לולאת redirects). נסה אתר אחר, או הוסף את פרטי העסק ידנית בשדה התיאור.');
+      }
+      throw new Error(`לא הצלחנו לקרוא את האתר (${response.status}). ודא שהכתובת נכונה.`);
+    }
+
+    const text = await response.text();
+    cleaned = text.replace(/\s+/g, ' ').trim().substring(0, 8000);
+
+    if (cleaned.length < 100) {
+      throw new Error('לא הצלחנו להוציא תוכן מהאתר. נסה אתר אחר.');
+    }
+  } catch (err: any) {
+    if (err.message?.startsWith('האתר') || err.message?.startsWith('לא הצלחנו')) throw err;
+    throw new Error(`לא הצלחנו להגיע לאתר (${err.message || 'network error'}). ודא שהכתובת נכונה.`);
   }
-
-  const html = await response.text();
-
-  // Extract meaningful text — strip tags, scripts, styles
-  const cleaned = html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
-    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-    .replace(/<header[\s\S]*?<\/header>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#\d+;/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .substring(0, 8000); // Limit to avoid token overflow
 
   if (cleaned.length < 50) {
     throw new Error('Could not extract meaningful content from this website.');
