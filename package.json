@@ -12,7 +12,9 @@
     "dev:server": "tsx watch src/server/index.ts",
     "build": "vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/index.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate": "node scripts/run-migration.mjs",
+    "smoke-test": "node scripts/smoke-test.mjs"
   },
   "repository": {
     "type": "git",
