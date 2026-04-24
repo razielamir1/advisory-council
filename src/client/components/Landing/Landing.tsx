@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 import AccessibilityMenu from '../shared/AccessibilityMenu';
 import { useHistory } from '../../hooks/useHistory';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { track } from '../../lib/analytics';
 
 const COUNCIL = [
   { role: 'CEO', name: 'Nadav B.', color: '#1e40af', desc: 'אסטרטגיה, exits, scaling' },
@@ -35,6 +36,21 @@ export default function Landing() {
   const navigate = useNavigate();
   const { history } = useHistory();
   const revealRef = useScrollReveal(100);
+  const landingAt = useRef<number>(Date.now());
+
+  useEffect(() => {
+    track('landing_view', {
+      language: navigator.language,
+      referrer: document.referrer || undefined,
+    });
+  }, []);
+
+  const handleCTA = () => {
+    track('start_flow_begin', {
+      time_since_landing_ms: Date.now() - landingAt.current,
+    });
+    navigate('/start');
+  };
 
   const totalDiscussions = history.length;
   const totalMessages = history.reduce((s, h) => s + h.messagesCount, 0);
@@ -67,7 +83,7 @@ export default function Landing() {
         </p>
 
         <div data-reveal="4">
-          <Button size="lg" onClick={() => navigate('/start')} className="text-lg px-10">
+          <Button size="lg" onClick={handleCTA} className="text-lg px-10">
             כנס את המועצה
           </Button>
         </div>
@@ -216,7 +232,7 @@ export default function Landing() {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-reveal="0">מוכן לכנס את המועצה?</h2>
         <p className="text-gray-500 mb-8" data-reveal="1">זה חינם, מקומי, ופרטי לחלוטין.</p>
         <div data-reveal="2">
-          <Button size="lg" onClick={() => navigate('/start')} className="text-lg px-10">
+          <Button size="lg" onClick={handleCTA} className="text-lg px-10">
             בוא נתחיל
           </Button>
         </div>

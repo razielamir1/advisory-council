@@ -2,6 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
+import { downloadExecutionPackage, downloadCombinedMarkdown } from '../../utils/exportPackage';
+import { DEMO_PLAN } from '../ExecutionPlan/ExecutionPlan';
+import { track } from '../../lib/analytics';
 
 const AGENT_ICONS: Record<string, string> = {
   architect: '🏗️',
@@ -89,6 +92,7 @@ export default function SummaryView() {
       ...summary.actionItems.map((a) => `- [${a.priority}] ${a.action} (${a.owner}, ${a.timeframe})`),
     ];
     navigator.clipboard.writeText(lines.join('\n'));
+    track('summary_copied', {});
   }
 
   return (
@@ -103,9 +107,29 @@ export default function SummaryView() {
             </button>
             <h1 className="text-3xl font-bold">סיכום המועצה</h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-end">
             <Button variant="ghost" size="sm" onClick={handleCopyMarkdown}>Copy MD</Button>
-            <Button variant="ghost" size="sm" onClick={() => window.print()}>PDF</Button>
+            <Button variant="ghost" size="sm" onClick={() => { track('export_downloaded', { format: 'pdf' }); window.print(); }}>PDF</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                track('export_downloaded', { format: 'md' });
+                downloadCombinedMarkdown({ state, summary, plan: DEMO_PLAN });
+              }}
+            >
+              הורד MD מאוחד
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                track('export_downloaded', { format: 'md' });
+                downloadExecutionPackage({ state, summary, plan: DEMO_PLAN });
+              }}
+            >
+              📦 חבילת ביצוע (PRD + תוכנית עסקית + משימות)
+            </Button>
             <Button size="sm" onClick={() => navigate(`/plan/${id}`)}>בנה תוכנית ביצוע</Button>
           </div>
         </div>

@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
+import { authedFetch } from '../../lib/authedFetch';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
+import { downloadExecutionPackage, downloadCombinedMarkdown } from '../../utils/exportPackage';
+import { track } from '../../lib/analytics';
 
 const AGENT_ICONS: Record<string, string> = {
   architect: '🏗️', 'backend-developer': '⚙️', 'frontend-developer': '🖥️',
@@ -22,7 +25,7 @@ const AGENT_LABELS: Record<string, string> = {
 import type { ExecutionPlan as ExecutionPlanType, Milestone, TeamRole, BudgetItem, RiskItem } from '../../../shared/types';
 
 // Demo execution plan for now — will be AI-generated
-const DEMO_PLAN: ExecutionPlanType = {
+export const DEMO_PLAN: ExecutionPlanType = {
   milestones: [
     { id: 'm1', name: 'Validation', description: 'Validate core assumptions with potential customers', phase: 'Planning', estimatedWeeks: 3, deliverables: ['Customer interviews', 'Market survey', 'Competitor analysis'], status: 'pending', agents: ['business-analyst', 'product-manager'] },
     { id: 'm2', name: 'MVP Design', description: 'Design the minimum viable product', phase: 'Planning', estimatedWeeks: 2, deliverables: ['Wireframes', 'Tech stack decision', 'Architecture doc'], status: 'pending', agents: ['architect', 'ui-designer', 'caio'] },
@@ -74,7 +77,39 @@ export default function ExecutionPlan() {
   const navigate = useNavigate();
   const { state } = useDiscussionContext();
   const [activeTab, setActiveTab] = useState<Tab>('timeline');
-  const [plan] = useState<ExecutionPlanType>(DEMO_PLAN);
+  const [plan, setPlan] = useState<ExecutionPlanType>(DEMO_PLAN);
+  const [planStatus, setPlanStatus] = useState<'idle' | 'loading' | 'ai' | 'demo' | 'error'>('idle');
+  const [planError, setPlanError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id || !state.summary || planStatus !== 'idle') return;
+    let cancelled = false;
+    setPlanStatus('loading');
+    (async () => {
+      try {
+        const res = await authedFetch(`/api/discussion/${id}/execution-plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        if (cancelled) return;
+        setPlan(data.plan);
+        setPlanStatus('ai');
+        track('execution_plan_generated', {});
+      } catch (err: any) {
+        if (cancelled) return;
+        setPlanError(err.message || 'Failed to generate plan');
+        setPlanStatus('demo');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, state.summary, apiKey, planStatus]);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'timeline', label: 'ציר זמן' },
@@ -95,8 +130,40 @@ export default function ExecutionPlan() {
             </button>
             <h1 className="text-3xl font-bold">תוכנית ביצוע</h1>
             <p className="text-gray-500 mt-1">{state.idea?.substring(0, 80)}</p>
+            <div className="mt-2 text-xs">
+              {planStatus === 'loading' && <span className="text-amber-400">⏳ בונה תוכנית מותאמת אישית…</span>}
+              {planStatus === 'ai' && <span className="text-green-400">✓ תוכנית מותאמת לרעיון שלך</span>}
+              {planStatus === 'demo' && <span className="text-gray-500">תוכנית דמו — {planError || 'לא ניתן היה ליצור תוכנית AI'}</span>}
+            </div>
           </div>
-          <Button onClick={() => navigate(`/launch/${id}`)}>יציאה לדרך</Button>
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button variant="ghost" size="sm" onClick={() => { track('export_downloaded', { format: 'pdf' }); window.print(); }}>PDF</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!state.summary}
+              onClick={() => {
+                if (!state.summary) return;
+                track('export_downloaded', { format: 'md' });
+                downloadCombinedMarkdown({ state, summary: state.summary, plan });
+              }}
+            >
+              הורד MD מאוחד
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!state.summary}
+              onClick={() => {
+                if (!state.summary) return;
+                track('export_downloaded', { format: 'md' });
+                downloadExecutionPackage({ state, summary: state.summary, plan });
+              }}
+            >
+              📦 חבילת ביצוע
+            </Button>
+            <Button onClick={() => navigate(`/launch/${id}`)}>יציאה לדרך</Button>
+          </div>
         </div>
 
         {/* Tabs */}

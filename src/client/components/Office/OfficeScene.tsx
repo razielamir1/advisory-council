@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import { useSSE } from '../../hooks/useSSE';
+import { track } from '../../lib/analytics';
+import { authedFetch } from '../../lib/authedFetch';
 import Character from './Character';
 import SpeechBubble from './SpeechBubble';
 import DiscussionPanel from './DiscussionPanel';
@@ -53,21 +55,62 @@ export default function OfficeScene() {
   const [hoveredBubble, setHoveredBubble] = useState<string | null>(null); // member ID
   const { isConnected, error: sseError } = useSSE(id || null, dispatch, readingSpeed);
 
+  const enteredAt = useRef<number>(Date.now());
+  const phaseEnteredAt = useRef<number>(Date.now());
+  const prevPhase = useRef<string>(state.currentPhase);
+  const completedTracked = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (state.currentPhase !== prevPhase.current) {
+      track('phase_transition', {
+        from_phase: prevPhase.current,
+        to_phase: state.currentPhase,
+        duration_ms: Date.now() - phaseEnteredAt.current,
+      });
+      prevPhase.current = state.currentPhase;
+      phaseEnteredAt.current = Date.now();
+    }
+  }, [state.currentPhase]);
+
+  useEffect(() => {
+    if (!completedTracked.current && state.status === 'complete') {
+      completedTracked.current = true;
+      track('discussion_completed', {
+        total_duration_ms: Date.now() - enteredAt.current,
+        messages_count: state.messages.length,
+      });
+    }
+  }, [state.status, state.messages.length]);
+
+  const handleBack = useCallback(() => {
+    if (!completedTracked.current && state.status !== 'complete') {
+      track('discussion_abandoned', {
+        last_phase: state.currentPhase,
+        time_spent_ms: Date.now() - enteredAt.current,
+      });
+    }
+    navigate('/start');
+  }, [navigate, state.currentPhase, state.status]);
+
   // Approximate token count from messages
   const totalChars = state.messages.reduce((s, m) => s + m.content.length, 0);
   const approxTokens = Math.round(totalChars / 4);
   const approxCost = (approxTokens / 1_000_000 * 0.15).toFixed(3); // Gemini Flash pricing ~$0.15/1M tokens
 
   const handleDirectSend = useCallback(async (type: string, content: string, targetMemberId: string) => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const storedKey = localStorage.getItem('advisory-council-api-key');
-    if (storedKey) headers['x-api-key'] = storedKey;
-    await fetch(`/api/discussion/${id}/interact`, {
+    const targetMember = state.members.find((m) => m.id === targetMemberId);
+    const messageType: 'question' | 'challenge' | 'info' | 'other' =
+      type === 'question' || type === 'challenge' || type === 'info' ? type : 'other';
+    track('member_interaction', {
+      member_role: targetMember?.role ?? 'unknown',
+      message_type: messageType,
+    });
+    await authedFetch(`/api/discussion/${id}/interact`, {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, content, targetMemberId }),
     });
-  }, [id]);
+  }, [id, state.members]);
 
   const activeMessage = state.messages.find(
     (m) => m.memberId === state.activeSpeakerId && m.id === state.messages[state.messages.length - 1]?.id
@@ -119,7 +162,7 @@ export default function OfficeScene() {
           </div>
 
           <button
-            onClick={() => navigate('/start')}
+            onClick={handleBack}
             className="absolute top-4 right-4 z-20 bg-slate-900/80 backdrop-blur rounded-lg px-3 py-1.5 text-xs text-slate-300 hover:text-white border border-slate-700/50 transition-colors"
           >
             חזרה
@@ -263,7 +306,7 @@ export default function OfficeScene() {
                       <div className="text-red-400 text-lg mb-2">שגיאה בהתחברות</div>
                       <div className="text-slate-400 text-sm mb-4">{sseError || 'לא ניתן להתחבר לשרת'}</div>
                       <button
-                        onClick={() => navigate('/start')}
+                        onClick={handleBack}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl transition-colors"
                       >
                         נסה שוב
@@ -374,12 +417,9 @@ export default function OfficeScene() {
                 <button
                   onClick={async () => {
                     if (!chairmanReply.trim()) return;
-                    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-                    const storedKey = localStorage.getItem('advisory-council-api-key');
-                    if (storedKey) headers['x-api-key'] = storedKey;
-                    await fetch(`/api/discussion/${id}/interact`, {
+                    await authedFetch(`/api/discussion/${id}/interact`, {
                       method: 'POST',
-                      headers,
+                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ type: 'question', content: chairmanReply.trim() }),
                     });
                     dispatch({ type: 'CHAIRMAN_INPUT_SENT' });

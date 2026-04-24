@@ -3,18 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import type { Domain, CouncilMode, DiscussionLanguage } from '../../../shared/types';
 import { LANGUAGES } from '../../../shared/types';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
-import { useApiKey } from '../../hooks/useApiKey';
 import { useHistory } from '../../hooks/useHistory';
 import DomainCard from './DomainCard';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
+import { track, hashString } from '../../lib/analytics';
+import { authedFetch } from '../../lib/authedFetch';
 
 type InputMode = 'new-idea' | 'existing-business' | 'free-problem' | 'open-chat';
 
 export default function DomainSelector() {
   const navigate = useNavigate();
   const { state, dispatch } = useDiscussionContext();
-  const { apiKey, setApiKey } = useApiKey();
   const { addToHistory } = useHistory();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [search, setSearch] = useState('');
@@ -31,7 +31,6 @@ export default function DomainSelector() {
   const [websiteError, setWebsiteError] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -57,29 +56,31 @@ export default function DomainSelector() {
     setWebsiteSummary('');
 
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (apiKey) headers['x-api-key'] = apiKey;
-
       // Auto-add https:// if missing
       let normalizedUrl = websiteUrl.trim();
       if (!/^https?:\/\//i.test(normalizedUrl)) {
         normalizedUrl = 'https://' + normalizedUrl;
       }
 
-      const res = await fetch('/api/discussion/analyze-website', {
+      const res = await authedFetch('/api/discussion/analyze-website', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: normalizedUrl }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        if (res.status === 401) { setShowApiKey(true); return; }
         throw new Error(err.error);
       }
 
       const data = await res.json();
       setWebsiteSummary(data.summary);
+      try {
+        const host = new URL(normalizedUrl).hostname;
+        track('website_analyzed', { url_domain_hash: await hashString(host) });
+      } catch {
+        /* ignore url parse errors */
+      }
     } catch (err: any) {
       setWebsiteError(err.message || 'Failed to analyze website');
     } finally {
@@ -111,23 +112,34 @@ export default function DomainSelector() {
     setLoading(true);
     setError('');
 
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (apiKey) headers['x-api-key'] = apiKey;
+    track('idea_submitted', {
+      idea_length: fullIdea.trim().length,
+      has_url: inputMode === 'existing-business',
+      mode,
+      domain: domainId,
+      language,
+    });
 
-      const res = await fetch('/api/discussion/start', {
+    try {
+      const res = await authedFetch('/api/discussion/start', {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain: { id: domainId }, idea: fullIdea, mode, language, userName: userName.trim() || undefined }),
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        if (res.status === 401) { setShowApiKey(true); return; }
-        throw new Error(err.error);
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 402 && err.code === 'USAGE_LIMIT_EXCEEDED') {
+          track('paywall_hit', { current_usage: err.current_usage ?? 0, limit: err.limit ?? 2 });
+          setError(`הגעת למגבלת ${err.limit ?? 2} דיונים חינם החודש. בקרוב תוכל/י לשדרג לתוכנית בתשלום.`);
+          return;
+        }
+        throw new Error(err.error || `HTTP ${res.status}`);
       }
 
       const { discussionId } = await res.json();
+
+      track('discussion_started', { discussion_id: discussionId });
 
       // Find domain for history
       const usedDomain = domains.find(d => d.id === domainId);
@@ -388,7 +400,10 @@ export default function DomainSelector() {
                 key={d.id}
                 domain={d}
                 selected={selectedDomain?.id === d.id}
-                onClick={() => dispatch({ type: 'SET_DOMAIN', payload: d })}
+                onClick={() => {
+                  dispatch({ type: 'SET_DOMAIN', payload: d });
+                  track('domain_selected', { domain_id: d.id, mode });
+                }}
               />
             ))}
           </div>
@@ -481,7 +496,10 @@ export default function DomainSelector() {
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.id}
-                    onClick={() => setLanguage(lang.id)}
+                    onClick={() => {
+                      setLanguage(lang.id);
+                      track('language_selected', { language: lang.id });
+                    }}
                     className={`px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${
                       language === lang.id
                         ? 'bg-indigo-600 text-white'
@@ -494,20 +512,6 @@ export default function DomainSelector() {
                 ))}
               </div>
             </div>
-
-            {/* API Key */}
-            {showApiKey && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 animate-fade-in">
-                <p className="text-amber-400 text-sm mb-3">נדרש API key של Gemini כדי להפעיל את המועצה.</p>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="AIza..."
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-amber-500"
-                />
-              </div>
-            )}
 
             {/* Error */}
             {error && (

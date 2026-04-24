@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDiscussionContext } from '../../contexts/DiscussionContext';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
+import { downloadExecutionPackage } from '../../utils/exportPackage';
+import { DEMO_PLAN } from '../ExecutionPlan/ExecutionPlan';
+import { track } from '../../lib/analytics';
 
 interface Task {
   id: string;
@@ -33,8 +36,18 @@ export default function LaunchPad() {
   const columnLabels = { todo: 'לביצוע', 'in-progress': 'בתהליך', done: 'הושלם' };
   const columnColors = { todo: 'border-gray-600', 'in-progress': 'border-amber-500', done: 'border-green-500' };
 
+  useEffect(() => {
+    track('launchpad_opened', {});
+  }, []);
+
   function moveTask(taskId: string, newStatus: Task['status']) {
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)));
+    setTasks((prev) => {
+      const current = prev.find((t) => t.id === taskId);
+      if (current && current.status !== newStatus) {
+        track('kanban_task_moved', { from_column: current.status, to_column: newStatus });
+      }
+      return prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t));
+    });
   }
 
   const completedCount = tasks.filter((t) => t.status === 'done').length;
@@ -56,7 +69,19 @@ export default function LaunchPad() {
             <Button variant="ghost" size="sm" onClick={() => navigate(`/office/${id}`)}>
               חזרה למועצה
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => window.print()}>הורד תוכנית (PDF)</Button>
+            <Button size="sm" variant="ghost" onClick={() => { track('export_downloaded', { format: 'pdf' }); window.print(); }}>PDF</Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!state.summary}
+              onClick={() => {
+                if (!state.summary) return;
+                track('export_downloaded', { format: 'md' });
+                downloadExecutionPackage({ state, summary: state.summary, plan: DEMO_PLAN });
+              }}
+            >
+              📦 חבילת ביצוע (MD)
+            </Button>
           </div>
         </div>
 

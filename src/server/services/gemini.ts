@@ -1,5 +1,26 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Gemini 2.5 Flash pricing (USD per 1M tokens). Keep in sync with docs.
+// https://ai.google.dev/pricing
+const PRICE_PROMPT_PER_M = 0.075;
+const PRICE_COMPLETION_PER_M = 0.3;
+
+export type UsageMetadata = {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  latencyMs: number;
+};
+
+function estimateCost(promptTokens: number, completionTokens: number): number {
+  return (
+    (promptTokens * PRICE_PROMPT_PER_M) / 1_000_000 +
+    (completionTokens * PRICE_COMPLETION_PER_M) / 1_000_000
+  );
+}
+
 // Retry on transient Gemini errors (429 rate limit, 5xx). Exponential backoff
 // with jitter. Tries up to 4 times total (~1s, 2s, 4s, 8s + jitter).
 async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
@@ -21,6 +42,7 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
+  lastUsage: UsageMetadata | null = null;
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GEMINI_API_KEY;
@@ -28,18 +50,39 @@ export class GeminiService {
     this.genAI = new GoogleGenerativeAI(key);
   }
 
+  private recordUsage(
+    modelName: string,
+    startedAt: number,
+    metadata: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined,
+  ): void {
+    const promptTokens = metadata?.promptTokenCount ?? 0;
+    const completionTokens = metadata?.candidatesTokenCount ?? 0;
+    const totalTokens = metadata?.totalTokenCount ?? promptTokens + completionTokens;
+    this.lastUsage = {
+      model: modelName,
+      promptTokens,
+      completionTokens,
+      totalTokens,
+      costUsd: estimateCost(promptTokens, completionTokens),
+      latencyMs: Date.now() - startedAt,
+    };
+  }
+
   async generateMessage(
     systemPrompt: string,
     userMessage: string,
     options: { model?: string; maxTokens?: number } = {}
   ): Promise<string> {
+    const modelName = options.model || 'gemini-2.5-flash';
     const model = this.genAI.getGenerativeModel({
-      model: options.model || 'gemini-2.5-flash',
+      model: modelName,
       systemInstruction: systemPrompt,
     });
 
+    const startedAt = Date.now();
     return withRetry(async () => {
       const result = await model.generateContent(userMessage);
+      this.recordUsage(modelName, startedAt, result.response.usageMetadata);
       return result.response.text();
     }, 'generateMessage');
   }
@@ -49,8 +92,9 @@ export class GeminiService {
     messages: { role: 'user' | 'assistant'; content: string }[],
     options: { model?: string; maxTokens?: number } = {}
   ): AsyncGenerator<string> {
+    const modelName = options.model || 'gemini-2.5-flash';
     const model = this.genAI.getGenerativeModel({
-      model: options.model || 'gemini-2.5-flash',
+      model: modelName,
       systemInstruction: systemPrompt,
     });
 
@@ -62,6 +106,7 @@ export class GeminiService {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
 
+    const startedAt = Date.now();
     const result = await withRetry(async () => {
       const chat = model.startChat({ history });
       return chat.sendMessageStream(lastMessage.content);
@@ -72,6 +117,13 @@ export class GeminiService {
       if (text) {
         yield text;
       }
+    }
+
+    try {
+      const agg = await result.response;
+      this.recordUsage(modelName, startedAt, agg.usageMetadata);
+    } catch (err) {
+      console.warn('[gemini] failed to read usage metadata from stream', err);
     }
   }
 }

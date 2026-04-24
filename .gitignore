@@ -34,3 +34,6 @@ dist/
 
 # Env (keep .env.example only)
 !.env.example
+
+# Unrelated sibling project
+wardrobe-ai/

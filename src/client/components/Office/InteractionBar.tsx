@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authedFetch } from '../../lib/authedFetch';
 
 interface InteractionBarProps {
   discussionId: string;
@@ -26,12 +27,9 @@ export default function InteractionBar({ discussionId, status }: InteractionBarP
     if (!input.trim() || sending) return;
     setSending(true);
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      const storedKey = localStorage.getItem('advisory-council-api-key');
-      if (storedKey) headers['x-api-key'] = storedKey;
-      await fetch(`/api/discussion/${discussionId}/interact`, {
+      await authedFetch(`/api/discussion/${discussionId}/interact`, {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: activeType, content: input }),
       });
       setInput('');

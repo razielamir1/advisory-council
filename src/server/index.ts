@@ -6,6 +6,8 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { discussionRouter } from './routes/discussion.js';
+import { historyRouter } from './routes/history.js';
+import { adminRouter } from './routes/admin.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { DOMAINS } from './config/domains.js';
 
@@ -18,7 +20,7 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
   origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'x-api-key'],
+  allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
 }));
 app.use(express.json({ limit: '100kb' }));
 
@@ -42,6 +44,8 @@ app.get('/api/domains', (_req, res) => {
 });
 
 app.use('/api/discussion', discussionRouter);
+app.use('/api/history', historyRouter);
+app.use('/api/admin', adminRouter);
 
 // In production, serve Vite build
 const clientDist = path.resolve(__dirname, '../../dist/client');

@@ -2,9 +2,19 @@ import { randomUUID } from 'crypto';
 import { Router, type Request, type Response } from 'express';
 import type { DiscussionState, UserInteraction, SSEEvent, CouncilMode, DiscussionLanguage } from '../../shared/types.js';
 import { apiKeyMiddleware } from '../middleware/api-key.js';
+import { requireAuth } from '../middleware/auth.js';
+import { usageLimit } from '../middleware/usage-limit.js';
 import { runDiscussion } from '../services/discussion-engine.js';
 import { readWebsite } from '../services/website-reader.js';
+import { buildExecutionPlanFromDiscussion } from '../services/execution-plan-builder.js';
 import { DOMAINS } from '../config/domains.js';
+import { isDbEnabled } from '../db/neon.js';
+import {
+  insertDiscussion,
+  logDiscussionEvent,
+  updateDiscussionStatus,
+  incrementUsage,
+} from '../db/repo.js';
 
 const router = Router();
 const discussions = new Map<string, DiscussionState>();
@@ -29,7 +39,7 @@ function scheduleCleanup(id: string): void {
 }
 
 // POST /api/discussion/analyze-website
-router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
+router.post('/analyze-website', requireAuth(), apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
   let { url } = req.body;
 
   if (!url || typeof url !== 'string') {
@@ -59,53 +69,75 @@ router.post('/analyze-website', apiKeyMiddleware, async (req: Request, res: Resp
 });
 
 // POST /api/discussion/start
-router.post('/start', apiKeyMiddleware, (req: Request, res: Response): void => {
-  const { idea, mode, language, userName } = req.body;
-  const domainId = req.body.domain?.id;
+router.post(
+  '/start',
+  requireAuth(),
+  usageLimit(),
+  apiKeyMiddleware,
+  async (req: Request, res: Response): Promise<void> => {
+    const { idea, mode, language, userName } = req.body;
+    const domainId = req.body.domain?.id;
 
-  const domain = DOMAINS.find((d) => d.id === domainId);
-  if (!domain) {
-    res.status(400).json({ error: 'Invalid domain.' });
-    return;
-  }
+    const domain = DOMAINS.find((d) => d.id === domainId);
+    if (!domain) {
+      res.status(400).json({ error: 'Invalid domain.' });
+      return;
+    }
 
-  if (!idea || typeof idea !== 'string' || idea.trim().length < 10) {
-    res.status(400).json({ error: 'Idea must be at least 10 characters.' });
-    return;
-  }
-  if (idea.length > MAX_IDEA_LENGTH) {
-    res.status(400).json({ error: `Idea must be under ${MAX_IDEA_LENGTH} characters.` });
-    return;
-  }
+    if (!idea || typeof idea !== 'string' || idea.trim().length < 10) {
+      res.status(400).json({ error: 'Idea must be at least 10 characters.' });
+      return;
+    }
+    if (idea.length > MAX_IDEA_LENGTH) {
+      res.status(400).json({ error: `Idea must be under ${MAX_IDEA_LENGTH} characters.` });
+      return;
+    }
 
-  const validMode: CouncilMode = VALID_MODES.includes(mode) ? mode : 'csuite';
-  const validLangs: DiscussionLanguage[] = ['he', 'en', 'ar', 'ru', 'fr', 'es'];
-  const validLang: DiscussionLanguage = validLangs.includes(language) ? language : 'he';
-  const discussionId = randomUUID();
+    const validMode: CouncilMode = VALID_MODES.includes(mode) ? mode : 'csuite';
+    const validLangs: DiscussionLanguage[] = ['he', 'en', 'ar', 'ru', 'fr', 'es'];
+    const validLang: DiscussionLanguage = validLangs.includes(language) ? language : 'he';
+    const discussionId = randomUUID();
+    const trimmedIdea = idea.trim();
 
-  const discussion: DiscussionState = {
-    id: discussionId,
-    domain,
-    idea: idea.trim(),
-    mode: validMode,
-    language: validLang,
-    members: [],
-    messages: [],
-    characterStates: [],
-    currentPhase: 'opening',
-    activeSpeakerId: null,
-    status: 'idle',
-    summary: null,
-    userName: typeof userName === 'string' ? userName.trim().slice(0, 50) : undefined,
-  };
+    const discussion: DiscussionState = {
+      id: discussionId,
+      domain,
+      idea: trimmedIdea,
+      mode: validMode,
+      language: validLang,
+      members: [],
+      messages: [],
+      characterStates: [],
+      currentPhase: 'opening',
+      activeSpeakerId: null,
+      status: 'idle',
+      summary: null,
+      userName: typeof userName === 'string' ? userName.trim().slice(0, 50) : undefined,
+    };
 
-  discussions.set(discussionId, discussion);
-  // Store the API key from /start so the SSE stream can use it
-  discussionKeys.set(discussionId, (req as any).apiKey);
-  scheduleCleanup(discussionId);
+    discussions.set(discussionId, discussion);
+    discussionKeys.set(discussionId, (req as any).apiKey);
+    scheduleCleanup(discussionId);
 
-  res.json({ discussionId });
-});
+    if (isDbEnabled() && req.user) {
+      try {
+        await insertDiscussion({
+          id: discussionId,
+          userId: req.user.id,
+          domain: domain.id,
+          mode: validMode,
+          language: validLang,
+          idea: trimmedIdea,
+        });
+        await incrementUsage(req.user.id);
+      } catch (err) {
+        console.error('[discussion/start] DB persist failed', err);
+      }
+    }
+
+    res.json({ discussionId });
+  },
+);
 
 // GET /api/discussion/:id/stream
 // No apiKeyMiddleware — EventSource can't send headers.
@@ -156,15 +188,35 @@ router.get('/:id/stream', (req: Request, res: Response): void => {
     });
   };
 
-  runDiscussion(discussion, res, apiKey, waitForChairman).catch((err) => {
-    console.error('[Discussion Error]', err);
-    sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
-    res.end();
-  });
+  runDiscussion(discussion, res, apiKey, waitForChairman)
+    .then(() => {
+      if (!isDbEnabled()) return;
+      const totalChars = discussion.messages.reduce((s, m) => s + m.content.length, 0);
+      const approxTokens = Math.round(totalChars / 4);
+      const approxCost = (approxTokens / 1_000_000) * 0.15;
+      updateDiscussionStatus(
+        id,
+        discussion.status === 'complete' ? 'complete' : 'abandoned',
+        {
+          messages: discussion.messages.length,
+          tokens: approxTokens,
+          costUsd: approxCost,
+        },
+      ).catch((err) => console.error('[discussion/stream] status update failed', err));
+    })
+    .catch((err) => {
+      console.error('[Discussion Error]', err);
+      sendSSE(res, { type: 'error', data: { message: 'Discussion failed. Please try again.' } });
+      res.end();
+      if (isDbEnabled()) {
+        updateDiscussionStatus(id, 'error').catch(() => {});
+        logDiscussionEvent(id, 'error', { message: String(err?.message ?? err) }).catch(() => {});
+      }
+    });
 });
 
 // POST /api/discussion/:id/interact
-router.post('/:id/interact', apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
+router.post('/:id/interact', requireAuth(), apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
   const id = String(req.params.id);
   const discussion = discussions.get(id);
   if (!discussion) {
@@ -280,13 +332,34 @@ Respond directly to the chairman.`;
       type: 'member-end',
       data: { messageId: responseMessageId, fullContent },
     });
+
+    if (isDbEnabled() && gemini.lastUsage) {
+      const { logGeminiUsage } = await import('../db/repo.js');
+      logGeminiUsage({
+        discussionId: id,
+        userId: req.user?.id ?? null,
+        model: gemini.lastUsage.model,
+        promptTokens: gemini.lastUsage.promptTokens,
+        completionTokens: gemini.lastUsage.completionTokens,
+        totalTokens: gemini.lastUsage.totalTokens,
+        costUsd: gemini.lastUsage.costUsd,
+        latencyMs: gemini.lastUsage.latencyMs,
+      }).catch((err) => console.error('[gemini_usage] log failed', err));
+      logDiscussionEvent(id, 'interact', {
+        member_role: targetMember.role,
+        message_type: interaction.type,
+      }).catch(() => {});
+    }
   } catch (err) {
     console.error('[Interact Response Error]', err);
+    if (isDbEnabled()) {
+      logDiscussionEvent(id, 'error', { where: 'interact', message: String((err as Error)?.message ?? err) }).catch(() => {});
+    }
   }
 });
 
 // POST /api/discussion/:id/cancel
-router.post('/:id/cancel', (req: Request, res: Response): void => {
+router.post('/:id/cancel', requireAuth(), (req: Request, res: Response): void => {
   const discussion = discussions.get(String(req.params.id));
   if (!discussion) {
     res.status(404).json({ error: 'Discussion not found.' });
@@ -305,7 +378,7 @@ router.post('/:id/cancel', (req: Request, res: Response): void => {
 });
 
 // GET /api/discussion/:id/summary
-router.get('/:id/summary', (req: Request, res: Response): void => {
+router.get('/:id/summary', requireAuth(), (req: Request, res: Response): void => {
   const discussion = discussions.get(String(req.params.id));
   if (!discussion) {
     res.status(404).json({ error: 'Discussion not found.' });
@@ -318,6 +391,34 @@ router.get('/:id/summary', (req: Request, res: Response): void => {
   }
 
   res.json({ summary: discussion.summary });
+});
+
+// POST /api/discussion/:id/execution-plan
+router.post('/:id/execution-plan', requireAuth(), apiKeyMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const id = String(req.params.id);
+  const discussion = discussions.get(id);
+  if (!discussion) {
+    res.status(404).json({ error: 'Discussion not found.' });
+    return;
+  }
+  if (!discussion.summary) {
+    res.status(400).json({ error: 'Discussion has not completed yet.' });
+    return;
+  }
+
+  const apiKey = (req as any).apiKey || discussionKeys.get(id);
+  if (!apiKey) {
+    res.status(401).json({ error: 'API key required.' });
+    return;
+  }
+
+  try {
+    const plan = await buildExecutionPlanFromDiscussion(discussion, apiKey);
+    res.json({ plan });
+  } catch (err: any) {
+    console.error('[Execution Plan Error]', err);
+    res.status(500).json({ error: err.message || 'Failed to generate execution plan.' });
+  }
 });
 
 export { router as discussionRouter, discussions, sseClients, sendSSE };
